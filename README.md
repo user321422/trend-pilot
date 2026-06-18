@@ -1,6 +1,4 @@
-# TrendPilot AI
-
-## Hackathon Project Plan & Team Division
+# TrendPilot 
 
 ---
 
