@@ -1,121 +1,93 @@
-import { PrismaClient } from "@prisma/client";
-import { callQwenJSON } from "../services/qwen.js";
+import prisma from '../services/prisma.js';
+import { suggestPublishSchedule, generateSocialPosts, buildExportPayload } from '../services/publishService.js';
 
-const prisma = new PrismaClient();
-
+// ──────────────────────────────────────────────────────────────────────────────
 // POST /publish/schedule
-export async function schedulePublish(req, res) {
-  const { draftId } = req.body;
+// Body: { briefId }
+// Returns a suggested publish date + rationale. No DB write — advisory only.
+// ──────────────────────────────────────────────────────────────────────────────
+async function schedulePublish(req, res) {
+  const { briefId } = req.body; // validated by Zod in route
 
-  if (!draftId) {
-    return res.status(400).json({ error: "draftId is required" });
+  const brief = await prisma.brief.findUnique({
+    where: { id: briefId },
+    include: { trend: true },
+  });
+
+  if (!brief) return res.status(404).json({ error: 'Brief not found' });
+  if (brief.status !== 'APPROVED') {
+    return res.status(400).json({ error: 'Brief must be APPROVED before scheduling' });
   }
 
-  const draft = await prisma.draft.findUnique({
-    where: { id: draftId },
-    include: { assignment: { include: { brief: { include: { trend: true } } } } },
-  });
-
-  if (!draft) return res.status(404).json({ error: "Draft not found" });
-
-  const trend = draft.assignment.brief.trend;
-
-  // Best publish times based on trend score
-  const now = new Date();
-  const suggestedDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-  suggestedDate.setHours(9, 0, 0, 0); // 9am next day
-
-  return res.json({
-    draftId,
-    trendTitle: trend.title,
-    trendScore: trend.trendScore,
-    suggestedPublishAt: suggestedDate.toISOString(),
-    reason: trend.trendScore > 70
-      ? "High trend score — publish within 24 hours to capitalize on momentum"
-      : "Moderate trend score — publish within 48 hours for best reach",
-    bestTimes: ["9:00 AM", "12:00 PM", "6:00 PM"],
-    bestDays: ["Tuesday", "Wednesday", "Thursday"],
-  });
+  const schedule = suggestPublishSchedule(brief.trend, brief);
+  return res.json({ briefId, schedule });
 }
 
+// ──────────────────────────────────────────────────────────────────────────────
 // POST /publish/social
-export async function generateSocialPosts(req, res) {
+// Body: { draftId }
+// Generates LinkedIn + X posts from the submitted draft.
+// ──────────────────────────────────────────────────────────────────────────────
+async function generateSocial(req, res) {
   const { draftId } = req.body;
-
-  if (!draftId) {
-    return res.status(400).json({ error: "draftId is required" });
-  }
-
-  const draft = await prisma.draft.findUnique({
-    where: { id: draftId },
-    include: { assignment: { include: { brief: true } } },
-  });
-
-  if (!draft) return res.status(404).json({ error: "Draft not found" });
-
-  const brief = draft.assignment.brief;
-
-  const prompt = `You are a social media manager. Based on the article below, return ONLY valid JSON with no markdown:
-{
-  "linkedin": "string (150-200 words, professional tone, ends with a question to drive engagement)",
-  "twitter": "string (under 280 chars, punchy, includes 2-3 hashtags)"
-}
-
-Article title: ${brief.h1}
-Article summary: ${brief.summary}
-Key angle: ${brief.angle}
-SEO keywords: ${(brief.seoKeywords ?? []).join(", ")}`;
-
-  const posts = await callQwenJSON(prompt);
-
-  return res.json({ draftId, posts });
-}
-
-// GET /publish/export/:draftId
-export async function exportContent(req, res) {
-  const { draftId } = req.params;
 
   const draft = await prisma.draft.findUnique({
     where: { id: draftId },
     include: {
       assignment: {
         include: {
-          brief: { include: { trend: true } },
-          writer: { select: { name: true, email: true } },
+          brief: {
+            include: { trend: true },
+          },
         },
       },
-      review: true,
     },
   });
 
-  if (!draft) return res.status(404).json({ error: "Draft not found" });
+  if (!draft) return res.status(404).json({ error: 'Draft not found' });
+  if (!draft.content) return res.status(400).json({ error: 'Draft has no content yet' });
 
   const brief = draft.assignment.brief;
-  const review = draft.review;
+  const trend = brief.trend;
 
-  return res.json({
-    export: {
-      title: brief.h1,
-      summary: brief.summary,
-      angle: brief.angle,
-      seoKeywords: brief.seoKeywords,
-      recommendedWordCount: brief.wordCount,
-      content: draft.content,
-      author: draft.assignment.writer,
-      trend: {
-        title: brief.trend.title,
-        opportunityScore: brief.trend.opportunityScore,
+  const posts = await generateSocialPosts(draft, brief, trend);
+  return res.json({ draftId, posts });
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// GET /publish/export?draftId=xxx
+// Returns the full assembled content export object.
+// ──────────────────────────────────────────────────────────────────────────────
+async function exportContent(req, res) {
+  const { draftId } = req.query;
+
+  if (!draftId) return res.status(400).json({ error: 'draftId query param is required' });
+
+  const draft = await prisma.draft.findUnique({
+    where: { id: draftId },
+    include: {
+      assignment: {
+        include: {
+          brief: {
+            include: { trend: true },
+          },
+        },
       },
-      review: review
-        ? {
-            seoComplianceScore: review.seoComplianceScore,
-            readabilityScore: review.readabilityScore,
-            keywordCoverage: review.keywordCoverage,
-            briefComplianceScore: review.briefComplianceScore,
-            aiNotes: review.aiNotes,
-          }
-        : null,
-      exportedAt: new Date().toISOString(),
+      review: true, // one-to-one per schema
     },
   });
+
+  if (!draft) return res.status(404).json({ error: 'Draft not found' });
+
+  const review = draft.review;
+  if (!review) return res.status(400).json({ error: 'No review found for this draft. Run /reviews/analyze first.' });
+
+  const brief = draft.assignment.brief;
+  const trend = brief.trend;
+
+  const payload = buildExportPayload(draft, review, brief, draft.assignment, trend);
+  return res.json(payload);
 }
+
+export { schedulePublish, generateSocial, exportContent };
+

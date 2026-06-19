@@ -1,49 +1,79 @@
-export async function callQwenJSON(prompt) {
-  // If no API key, return realistic mock data so the app works without Qwen
-  if (!process.env.QWEN_API_KEY || process.env.QWEN_API_KEY === "your_actual_qwen_api_key_here") {
-    console.log("No Qwen API key — using mock brief data.");
-    return {
-      summary: "This topic is gaining rapid traction across tech communities and presents a strong content opportunity for early movers.",
-      audienceAnalysis: "Tech-savvy professionals aged 25-40 who follow industry trends and are looking for actionable insights.",
-      angle: "How this trend will reshape the industry in the next 12 months and what teams should do now.",
-      seoKeywords: ["AI tools", "tech trends", "digital transformation", "startup strategy", "2026 trends"],
-      h1: "Why This Trend Is the Biggest Opportunity for Tech Teams Right Now",
-      headingStructure: [
-        { h2: "What Is Driving This Trend", h3: ["Key data points", "Who is leading it"] },
-        { h2: "How It Affects Your Industry", h3: ["Short term impact", "Long term outlook"] },
-        { h2: "What You Should Do Now", h3: ["Quick wins", "Strategic moves"] },
-        { h2: "Conclusion", h3: [] }
-      ],
-      recommendedWordCount: 1500,
-    };
+import { withTimeout, withRetry } from '../middleware/errorHandler.js';
+
+const QWEN_API_URL = 'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation';
+const TIMEOUT_MS = 15000; // 15s per attempt
+const MAX_RETRIES = 3;
+
+/**
+ * Calls Qwen and returns parsed JSON.
+ * - Strips ```json fences automatically
+ * - Retries up to 3 times with exponential backoff
+ * - Times out each attempt at 15s
+ * - Falls back to mock if QWEN_API_KEY is not set
+ */
+async function callQwenJSON(prompt) {
+  if (!process.env.QWEN_API_KEY) {
+    console.warn('[Qwen] No QWEN_API_KEY found — using mock response');
+    return getMockBrief(prompt);
   }
 
-  // Real Qwen call — used when API key is set
-  const response = await fetch(process.env.QWEN_BASE_URL + "/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": "Bearer " + process.env.QWEN_API_KEY,
-    },
-    body: JSON.stringify({
-      model: "qwen-plus",
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.7,
-    }),
-  });
+  return withRetry(async () => {
+    const response = await withTimeout(
+      fetch(QWEN_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${process.env.QWEN_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: 'qwen-plus',
+          input: { messages: [{ role: 'user', content: prompt }] },
+          parameters: { result_format: 'message' },
+        }),
+      }),
+      TIMEOUT_MS,
+      'Qwen API call'
+    );
 
-  if (!response.ok) {
-    const err = await response.text();
-    throw new Error("Qwen API error: " + err);
-  }
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Qwen API error ${response.status}: ${text}`);
+    }
 
-  const data = await response.json();
-  const raw = data.choices[0].message.content;
-  const clean = raw.replace(/^```json\s*/i, "").replace(/```\s*$/i, "").trim();
+    const data = await response.json();
+    const raw = data?.output?.choices?.[0]?.message?.content ?? '';
 
-  try {
-    return JSON.parse(clean);
-  } catch {
-    throw new Error("Qwen returned invalid JSON: " + clean);
-  }
+    // Strip ```json fences if model added them
+    const cleaned = raw.replace(/```json\s*/gi, '').replace(/```/g, '').trim();
+
+    try {
+      return JSON.parse(cleaned);
+    } catch {
+      throw new Error(`Qwen returned invalid JSON: ${cleaned.slice(0, 200)}`);
+    }
+  }, MAX_RETRIES);
 }
+
+// ── Mock fallback ─────────────────────────────────────────────────────────────
+function getMockBrief(prompt) {
+  const topicMatch = prompt.match(/Topic:\s*(.+)/);
+  const topic = topicMatch?.[1]?.trim() ?? 'Emerging Tech Trends';
+
+  return {
+    summary: `A comprehensive analysis of ${topic} and its implications for content teams.`,
+    audienceAnalysis: 'Tech-savvy professionals and content marketers aged 25–45 seeking actionable insights.',
+    angle: `Why ${topic} is reshaping the content landscape — and what to do about it.`,
+    seoKeywords: [topic.toLowerCase(), 'content strategy', 'AI tools', 'digital marketing', 'trend analysis'],
+    h1: `${topic}: What Every Content Team Needs to Know in 2026`,
+    headingStructure: [
+      { h2: 'What Is Driving This Trend?', h3: ['Key Statistics', 'Industry Context'] },
+      { h2: 'Impact on Content Strategy', h3: ['Short-term Changes', 'Long-term Implications'] },
+      { h2: 'Actionable Steps for Your Team', h3: ['Quick Wins', 'Strategic Moves'] },
+      { h2: 'Tools and Resources', h3: [] },
+    ],
+    recommendedWordCount: 1500,
+    _mock: true,
+  };
+}
+
+export { callQwenJSON };
