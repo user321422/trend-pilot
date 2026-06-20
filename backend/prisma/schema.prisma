@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x", "windows"]
 }
 
 datasource db {
@@ -9,8 +10,6 @@ datasource db {
 
 enum Role {
   ADMIN
-  EDITOR
-  WRITER
 }
 
 enum BriefStatus {
@@ -31,7 +30,7 @@ model User {
   name             String
   email            String       @unique
   passwordHash     String
-  role             Role         @default(WRITER)
+  role             Role         @default(ADMIN)
   expertiseTags    String[]     @default([])
   historicalRating Float        @default(3.0)
   currentLoad      Int          @default(0)

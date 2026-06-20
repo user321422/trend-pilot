@@ -1,4 +1,7 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono&display=swap');
+
 :root {
+  /* Claude Editorial Palette */
   --primary: #cc785c;
   --primary-active: #a9583e;
   --ink: #141413;
@@ -11,16 +14,15 @@
   --surface-soft: #f5f0e8;
   --surface-card: #efe9de;
   --surface-dark: #181715;
-  --surface-dark-elevated: #252320;
+  --surface-dark-soft: #1f1e1b;
   --on-primary: #ffffff;
   --on-dark: #faf9f5;
   --on-dark-soft: #a09d96;
-  --success: #5db872;
-  --warning: #d4a017;
-  --error: #c64545;
-  --display: "Cormorant Garamond", "EB Garamond", Georgia, serif;
-  --sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --mono: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+
+  /* Typography */
+  --display: "Cormorant Garamond", Georgia, serif;
+  --sans: "Inter", -apple-system, sans-serif;
+  --mono: "JetBrains Mono", monospace;
 
   font-family: var(--sans);
   color: var(--body);
@@ -35,22 +37,41 @@
   box-sizing: border-box;
 }
 
-html {
-  min-width: 320px;
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100svh;
   background: var(--canvas);
 }
 
-body {
-  min-width: 320px;
-  min-height: 100svh;
-  margin: 0;
+button {
+  cursor: pointer;
+  font-family: inherit;
+  border: none;
+  background: transparent;
+  padding: 0;
 }
 
-button,
-a {
-  -webkit-tap-highlight-color: transparent;
+input, textarea {
+  font-family: inherit;
+  border: none;
+  outline: none;
+  background: transparent;
 }
 
-p {
-  margin: 0;
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--hairline);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
 }
