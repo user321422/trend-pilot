@@ -169,6 +169,45 @@
   padding-top: 4px;
 }
 
+/* ── Markdown Content ───────────────────────────────────────────────────────── */
+.markdown-body {
+  line-height: 1.6;
+  white-space: pre-wrap; /* Crucial for single newlines */
+}
+.markdown-body p {
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+.markdown-body p:last-child {
+  margin-bottom: 0;
+}
+.markdown-body h1, .markdown-body h2, .markdown-body h3 {
+  margin-top: 24px;
+  margin-bottom: 12px;
+  font-family: var(--display);
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+}
+.markdown-body h1 { font-size: 24px; }
+.markdown-body h2 { font-size: 20px; }
+.markdown-body h3 { font-size: 18px; }
+.markdown-body h1:first-child, .markdown-body h2:first-child, .markdown-body h3:first-child {
+  margin-top: 0;
+}
+.markdown-body ul, .markdown-body ol {
+  margin-top: 0;
+  margin-bottom: 16px;
+  padding-left: 24px;
+}
+.markdown-body li {
+  margin-bottom: 6px;
+}
+.markdown-body strong {
+  font-weight: 600;
+  color: var(--body-strong);
+}
+
 .message.user .message-content {
   font-size: 18px;
 }
@@ -330,4 +369,95 @@
 }
 .login-btn:hover {
   background: var(--primary-active);
+}
+
+/* ── Mobile Responsiveness ───────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .dashboard-shell {
+    flex-direction: column-reverse;
+  }
+
+  .sidebar {
+    width: 100%;
+    height: 60px;
+    flex-direction: row;
+    padding: 8px 12px;
+    border-right: none;
+    border-top: 1px solid var(--hairline);
+    overflow-x: auto;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .sidebar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .brand {
+    margin-bottom: 0;
+    padding: 0;
+  }
+
+  .brand span:not(.brand-mark) {
+    display: none;
+  }
+
+  .nav-list {
+    flex-direction: row;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .nav-list > div {
+    display: none;
+  }
+
+  .nav-item {
+    white-space: nowrap;
+    padding: 0 12px;
+  }
+
+  .sidebar-footer {
+    padding: 0;
+    border-top: none;
+    margin-left: auto;
+  }
+
+  .user-profile {
+    display: none;
+  }
+
+  .topbar {
+    padding: 0 16px;
+    height: 56px;
+    flex-shrink: 0;
+  }
+
+  .chat-container {
+    padding: 16px 0;
+  }
+
+  .chat-messages {
+    padding: 0 16px;
+    gap: 24px;
+  }
+
+  .chat-input-wrapper {
+    padding: 16px;
+  }
+
+  .message {
+    gap: 12px;
+  }
+
+  .login-card {
+    padding: 24px;
+    margin: 16px;
+    width: calc(100% - 32px);
+  }
+
+  .login-card h1 {
+    font-size: 24px;
+    margin-bottom: 24px;
+  }
 }

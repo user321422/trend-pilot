@@ -1,10 +1,10 @@
-# TrendPilot 
+# Trendy 
 
 ---
 
 # Project Overview
 
-TrendPilot AI is an AI-powered content operations platform that automatically transforms trending internet topics into publish-ready content workflows.
+Trendy AI is an AI-powered content operations platform that automatically transforms trending internet topics into publish-ready content workflows.
 
 The system continuously monitors trend sources, evaluates relevance using AI, generates content briefs, assigns writers, reviews submitted drafts, and prepares content for publishing.
 
@@ -23,7 +23,7 @@ Content teams often miss trending opportunities because:
 * SEO optimization is inconsistent
 * Publishing workflows are fragmented
 
-TrendPilot AI automates these processes while preserving editorial control.
+Trendy AI automates these processes while preserving editorial control.
 
 ---
 

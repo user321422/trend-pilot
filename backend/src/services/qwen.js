@@ -1,6 +1,6 @@
 import { withTimeout, withRetry } from '../middleware/errorHandler.js';
 
-const QWEN_API_URL = 'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation';
+const QWEN_API_URL = process.env.QWEN_API_URL || 'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation';
 const TIMEOUT_MS = 15000; // 15s per attempt
 const MAX_RETRIES = 3;
 
@@ -18,6 +18,12 @@ async function callQwenJSON(prompt) {
   }
 
   return withRetry(async () => {
+    const isOpenAI = QWEN_API_URL.includes('/chat/completions');
+
+    const bodyPayload = isOpenAI
+      ? { model: 'qwen-plus', messages: [{ role: 'user', content: prompt }] }
+      : { model: 'qwen-plus', input: { messages: [{ role: 'user', content: prompt }] }, parameters: { result_format: 'message' } };
+
     const response = await withTimeout(
       fetch(QWEN_API_URL, {
         method: 'POST',
@@ -25,11 +31,7 @@ async function callQwenJSON(prompt) {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${process.env.QWEN_API_KEY}`,
         },
-        body: JSON.stringify({
-          model: 'qwen-plus',
-          input: { messages: [{ role: 'user', content: prompt }] },
-          parameters: { result_format: 'message' },
-        }),
+        body: JSON.stringify(bodyPayload),
       }),
       TIMEOUT_MS,
       'Qwen API call'
@@ -41,7 +43,9 @@ async function callQwenJSON(prompt) {
     }
 
     const data = await response.json();
-    const raw = data?.output?.choices?.[0]?.message?.content ?? '';
+    const raw = isOpenAI
+      ? data?.choices?.[0]?.message?.content ?? ''
+      : data?.output?.choices?.[0]?.message?.content ?? '';
 
     // Strip ```json fences if model added them
     const cleaned = raw.replace(/```json\s*/gi, '').replace(/```/g, '').trim();
@@ -76,4 +80,42 @@ function getMockBrief(prompt) {
   };
 }
 
-export { callQwenJSON };
+async function callQwenChat(messages) {
+  if (!process.env.QWEN_API_KEY) {
+    console.warn('[Qwen] No QWEN_API_KEY found — using mock chat response');
+    return "This is a mock chat response. Please add your QWEN_API_KEY to the .env file to enable the real AI assistant.";
+  }
+
+  return withRetry(async () => {
+    const isOpenAI = QWEN_API_URL.includes('/chat/completions');
+
+    const bodyPayload = isOpenAI
+      ? { model: 'qwen-plus', messages }
+      : { model: 'qwen-plus', input: { messages }, parameters: { result_format: 'message' } };
+
+    const response = await withTimeout(
+      fetch(QWEN_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${process.env.QWEN_API_KEY}`,
+        },
+        body: JSON.stringify(bodyPayload),
+      }),
+      TIMEOUT_MS,
+      'Qwen API call'
+    );
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Qwen API error ${response.status}: ${text}`);
+    }
+
+    const data = await response.json();
+    return isOpenAI
+      ? data?.choices?.[0]?.message?.content ?? ''
+      : data?.output?.choices?.[0]?.message?.content ?? '';
+  }, MAX_RETRIES);
+}
+
+export { callQwenJSON, callQwenChat };

@@ -31,7 +31,7 @@ async function generateSocialPosts(draft, brief, trend) {
     const title = brief.h1 ?? brief.summary ?? trend.title;
     const kw = brief.seoKeywords?.[0] ?? trend.title;
     return {
-      linkedin: { post: `Trends move fast. We published a deep-dive on "${title}". Read the full piece in comments. #ContentStrategy #${kw.replace(/\s+/g, '')} #TrendPilot`, hashtags: ['ContentStrategy', kw.replace(/\s+/g, ''), 'TrendPilot'] },
+      linkedin: { post: `Trends move fast. We published a deep-dive on "${title}". Read the full piece in comments. #ContentStrategy #${kw.replace(/\s+/g, '')} #Trendy`, hashtags: ['ContentStrategy', kw.replace(/\s+/g, ''), 'Trendy'] },
       twitter: { post: `"${title}" is trending and we wrote the definitive take. #${kw.replace(/\s+/g, '')} #ContentStrategy`, hashtags: [kw.replace(/\s+/g, ''), 'ContentStrategy'] },
       _mock: true,
     };

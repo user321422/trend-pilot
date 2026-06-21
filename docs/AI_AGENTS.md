@@ -1,8 +1,8 @@
-# TrendPilot AI Agents Implementation Plan
+# Trendy AI Agents Implementation Plan
 
 ## Overview
 
-TrendPilot uses five AI agents to automate the content creation workflow from trend discovery to publishing.
+Trendy uses five AI agents to automate the content creation workflow from trend discovery to publishing.
 
 The workflow follows:
 

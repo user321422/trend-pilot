@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// api.ts — Centralised HTTP client for TrendPilot
+// api.ts — Centralised HTTP client for Trendy
 //
 // Base URL:  /api  (proxied by Vite to http://localhost:3000 in dev)
 //            In production set VITE_API_URL env variable.
@@ -177,4 +177,12 @@ export interface PublishResult {
 export const publish = {
   prepare: (payload: PublishPayload) =>
     post<PublishResult>('/publish/prepare', payload),
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Chat
+// ─────────────────────────────────────────────────────────────────────────────
+export const chat = {
+  send: (messages: { role: string; content: string }[]) =>
+    post<{ reply: string }>('/chat', { messages }),
 };

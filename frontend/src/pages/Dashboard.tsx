@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, KeyboardEvent } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { useTrends } from '../hooks/useTrends';
-import { briefs as briefsApi } from '../services/api';
+import { briefs as briefsApi, chat as chatApi } from '../services/api';
 
 type Message = {
   id: string;
@@ -14,7 +15,7 @@ export default function Dashboard() {
     {
       id: '1',
       role: 'ai',
-      content: 'Hello. I am TrendPilot. What would you like to do today? You can ask me to "sync trends" or "generate briefs".'
+      content: 'Hello. I am Trendy. What would you like to do today? You can ask me to "sync trends" or "generate briefs".'
     }
   ]);
   const [input, setInput] = useState('');
@@ -29,11 +30,14 @@ export default function Dashboard() {
     scrollToBottom();
   }, [messages, isTyping]);
 
-  async function handleSend() {
-    if (!input.trim()) return;
+  async function handleSend(overrideInput?: string | React.MouseEvent) {
+    const textToSend = typeof overrideInput === 'string' ? overrideInput : input;
+    if (!textToSend.trim()) return;
     
-    const userMessage = input.trim();
-    setInput('');
+    const userMessage = textToSend.trim();
+    if (typeof overrideInput !== 'string') {
+      setInput('');
+    }
     
     setMessages(prev => [...prev, { id: Date.now().toString(), role: 'user', content: userMessage }]);
     setIsTyping(true);
@@ -79,11 +83,30 @@ export default function Dashboard() {
         }]);
       } 
       else {
-        await new Promise(r => setTimeout(r, 600));
+        const apiMessages = messages
+          .filter(m => typeof m.content === 'string')
+          .map(m => ({ 
+            role: m.role === 'ai' ? 'assistant' : 'user', 
+            content: m.content as string
+          }));
+        apiMessages.push({ role: 'user', content: userMessage });
+
+        apiMessages.unshift({ 
+          role: 'system', 
+          content: 'You are Trendy, the exclusive AI assistant for the Trendy Content Operations Platform. Your ONLY purpose is to assist with content strategy, trending topics, brief generation, and publishing workflows. You MUST NOT answer questions about coding, mathematics, general trivia, or any topic outside of content operations. If a user asks an out-of-scope question, politely decline.\n\nCRITICAL FORMATTING RULES:\n1. STRICTLY NO EMOJIS. You are forbidden from using any emojis (e.g., no 👋, no ✅, no 🚀). Your tone must be strictly professional, editorial, and serious.\n2. Always format your responses using clean Markdown. Use double newlines (\\n\\n) to separate paragraphs and lists so they render properly.\n3. Keep your tone concise and direct.' 
+        });
+
+        apiMessages.splice(1, 0, 
+          { role: 'user', content: 'Can you write a python script for me?' },
+          { role: 'assistant', content: 'I specialize strictly in content operations and strategy. I do not write code or software scripts. However, if you are looking to write an article about Python, I would be happy to help you discover the latest Python-related trends and generate a content brief for you!' }
+        );
+        
+        const { reply } = await chatApi.send(apiMessages);
+        
         setMessages(prev => [...prev, { 
           id: Date.now().toString(), 
           role: 'ai', 
-          content: "I'm focused on content operations right now. Try asking me to 'sync trends' or 'generate briefs'."
+          content: reply
         }]);
       }
     } catch (err) {
@@ -111,16 +134,16 @@ export default function Dashboard() {
           {messages.map(msg => (
             <div key={msg.id} className={`message ${msg.role}`}>
               <div className="message-avatar">
-                {msg.role === 'ai' ? 'TP' : 'U'}
+                {msg.role === 'ai' ? 'T' : 'U'}
               </div>
-              <div className="message-content">
-                {msg.content}
+              <div className="message-content markdown-body">
+                {typeof msg.content === 'string' ? <ReactMarkdown>{msg.content}</ReactMarkdown> : msg.content}
               </div>
             </div>
           ))}
           {isTyping && (
             <div className="message ai">
-              <div className="message-avatar">TP</div>
+              <div className="message-avatar">T</div>
               <div className="message-content" style={{ color: 'var(--text-tertiary)' }}>
                 Thinking...
               </div>
@@ -131,10 +154,14 @@ export default function Dashboard() {
       </div>
       
       <div className="chat-input-wrapper">
+        <div className="quick-actions" style={{ display: 'flex', gap: '8px', marginBottom: '12px', justifyContent: 'center' }}>
+          <button className="quick-action-chip" onClick={() => handleSend('Sync latest trends')} disabled={isTyping} style={{ padding: '6px 12px', borderRadius: '16px', border: '1px solid var(--border)', background: 'var(--surface-raised)', fontSize: '12px', cursor: 'pointer', color: 'var(--text-secondary)' }}>🔄 Sync Trends</button>
+          <button className="quick-action-chip" onClick={() => handleSend('Generate briefs for top trends')} disabled={isTyping} style={{ padding: '6px 12px', borderRadius: '16px', border: '1px solid var(--border)', background: 'var(--surface-raised)', fontSize: '12px', cursor: 'pointer', color: 'var(--text-secondary)' }}>📝 Generate Briefs</button>
+        </div>
         <div className="chat-input-box">
           <input 
             type="text" 
-            placeholder="Message TrendPilot..." 
+            placeholder="Message Trendy..." 
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}

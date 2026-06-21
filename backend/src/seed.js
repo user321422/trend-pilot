@@ -7,7 +7,7 @@ async function main() {
   console.log("Seeding...");
 
   const users = [
-    { name: "Admin User", email: "admin@trendpilot.dev", role: "ADMIN", password: "adminpass123" },
+    { name: "Admin User", email: "admin@trendy.dev", role: "ADMIN", password: "adminpass123" },
   ];
 
   for (const u of users) {
