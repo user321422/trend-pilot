@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
-  const [email, setEmail] = useState('admin@trendpilot.dev');
+  const [email, setEmail] = useState('admin@trendy.dev');
   const [password, setPassword] = useState('adminpass123');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -34,7 +34,7 @@ export default function Login() {
       <div className="login-card">
         <div className="login-brand">
           <span className="brand-mark" aria-hidden="true" />
-          <span>TrendPilot</span>
+          <span>Trendy</span>
         </div>
         
         <h1>Welcome back</h1>
@@ -73,7 +73,7 @@ export default function Login() {
         <div className="login-footer">
           <p>Demo accounts available:</p>
           <ul>
-            <li><strong>admin@trendpilot.dev</strong> / adminpass123</li>
+            <li><strong>admin@trendy.dev</strong> / adminpass123</li>
           </ul>
         </div>
       </div>

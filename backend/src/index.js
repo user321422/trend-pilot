@@ -8,6 +8,7 @@ import briefRoutes from './routes/briefs.js';
 import assignmentRoutes from './routes/assignments.js';
 import reviewRoutes from './routes/reviews.js';
 import publishRoutes from './routes/publish.js';
+import chatRoutes from './routes/chat.js';
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use('/briefs', briefRoutes);
 app.use('/assignments', assignmentRoutes);
 app.use('/reviews', reviewRoutes);
 app.use('/publish', publishRoutes);
+app.use('/chat', chatRoutes);
 
 // ── Health check ──────────────────────────────────────────────────────────────
 app.get('/health', (_req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
@@ -32,4 +34,4 @@ app.get('/health', (_req, res) => res.json({ status: 'ok', timestamp: new Date()
 app.use(errorHandler);
 
 const PORT = process.env.PORT ?? 3000;
-app.listen(PORT, () => console.log(`TrendPilot backend running at http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`Trendy backend running at http://localhost:${PORT}`));

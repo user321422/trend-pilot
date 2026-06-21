@@ -1,4 +1,4 @@
-trendpilot-ai/
+trendy-ai/
 ├── README.md
 ├── .gitignore
 ├── .env.example

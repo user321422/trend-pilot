@@ -18,10 +18,10 @@ export default function DashboardLayout() {
 
   return (
     <main className="dashboard-shell">
-      <aside className="sidebar" aria-label="TrendPilot navigation">
+      <aside className="sidebar" aria-label="Trendy navigation">
         <div className="brand">
           <span className="brand-mark" aria-hidden="true" />
-          <span>TrendPilot</span>
+          <span>Trendy</span>
         </div>
         <nav className="nav-list">
           <NavLink to="/" end className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
@@ -55,7 +55,7 @@ export default function DashboardLayout() {
 
       <section className="content-area">
         <header className="topbar">
-          TrendPilot AI
+          Trendy AI
         </header>
         <Outlet />
       </section>

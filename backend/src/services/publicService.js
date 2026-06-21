@@ -79,8 +79,8 @@ Return ONLY valid JSON with this exact shape:
     const kw = brief.seoKeywords?.[0] ?? trend.title;
     return {
       linkedin: {
-        post: `📈 Trends move fast — and so should your content strategy.\n\nWe just published a deep-dive on "${title}", breaking down what it means for your audience and how to position your brand ahead of the curve.\n\nKey takeaways inside:\n• Why ${kw} is surging right now\n• Actionable angles your competitors haven't covered yet\n• What your audience actually wants to read\n\nRead the full piece — link in comments 👇\n\n#ContentStrategy #${kw.replace(/\s+/g, '')} #TrendPilot`,
-        hashtags: ['ContentStrategy', kw.replace(/\s+/g, ''), 'TrendPilot'],
+        post: `📈 Trends move fast — and so should your content strategy.\n\nWe just published a deep-dive on "${title}", breaking down what it means for your audience and how to position your brand ahead of the curve.\n\nKey takeaways inside:\n• Why ${kw} is surging right now\n• Actionable angles your competitors haven't covered yet\n• What your audience actually wants to read\n\nRead the full piece — link in comments 👇\n\n#ContentStrategy #${kw.replace(/\s+/g, '')} #Trendy`,
+        hashtags: ['ContentStrategy', kw.replace(/\s+/g, ''), 'Trendy'],
       },
       twitter: {
         post: `🔥 "${title}" is trending — and we wrote the definitive take on it. Don't miss this one. #${kw.replace(/\s+/g, '')} #ContentStrategy`,
