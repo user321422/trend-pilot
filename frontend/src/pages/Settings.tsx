@@ -16,7 +16,8 @@ export default function Settings() {
   };
 
   return (
-    <div style={{ padding: '40px', maxWidth: '1000px', margin: '0 auto', width: '100%' }}>
+    <div style={{ flex: 1, overflowY: 'auto', width: '100%' }}>
+      <div style={{ padding: '40px', maxWidth: '1000px', margin: '0 auto', width: '100%' }}>
       <div style={{ marginBottom: '40px' }}>
         <h1 style={{ fontFamily: 'var(--display)', fontSize: '36px', margin: '0 0 8px', color: 'var(--ink)' }}>Settings</h1>
         <p style={{ color: 'var(--body)', fontSize: '16px' }}>Configure application preferences.</p>
@@ -62,6 +63,7 @@ export default function Settings() {
           </button>
         </div>
       </div>
+    </div>
     </div>
   );
 }

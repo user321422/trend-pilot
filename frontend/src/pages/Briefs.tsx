@@ -1,6 +1,7 @@
 export default function Briefs() {
   return (
-    <div style={{ padding: '40px', maxWidth: '1000px', margin: '0 auto', width: '100%' }}>
+    <div style={{ flex: 1, overflowY: 'auto', width: '100%' }}>
+      <div style={{ padding: '40px', maxWidth: '1000px', margin: '0 auto', width: '100%' }}>
       <div style={{ marginBottom: '40px' }}>
         <h1 style={{ fontFamily: 'var(--display)', fontSize: '36px', margin: '0 0 8px', color: 'var(--ink)' }}>Content Briefs</h1>
         <p style={{ color: 'var(--body)', fontSize: '16px' }}>Agent 2: AI-generated editorial outlines waiting for approval.</p>
@@ -11,6 +12,7 @@ export default function Briefs() {
         <h3 style={{ margin: '0 0 8px', fontSize: '18px', color: 'var(--ink)' }}>Brief Queue Empty</h3>
         <p style={{ color: 'var(--muted)' }}>Generate briefs from the Chat Assistant or Trends page to see them here.</p>
       </div>
+    </div>
     </div>
   );
 }
