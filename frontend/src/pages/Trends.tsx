@@ -22,7 +22,7 @@ export default function Trends() {
           className="button outline" 
           onClick={handleSync} 
           disabled={refreshing}
-          style={{ height: '40px', padding: '0 16px', border: '1px solid var(--hairline)', borderRadius: '6px', background: 'var(--canvas)' }}
+          style={{ height: '40px', padding: '0 16px', border: '1px solid var(--hairline)', borderRadius: '6px', background: 'var(--surface-card)', color: 'var(--ink)', cursor: 'pointer', fontWeight: 500 }}
         >
           {refreshing ? 'Syncing...' : 'Sync Live Sources'}
         </button>

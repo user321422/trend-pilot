@@ -144,7 +144,7 @@ export default function Dashboard() {
           {isTyping && (
             <div className="message ai">
               <div className="message-avatar">T</div>
-              <div className="message-content" style={{ color: 'var(--text-tertiary)' }}>
+              <div className="message-content" style={{ color: 'var(--muted)' }}>
                 Thinking...
               </div>
             </div>
@@ -155,8 +155,8 @@ export default function Dashboard() {
       
       <div className="chat-input-wrapper">
         <div className="quick-actions" style={{ display: 'flex', gap: '8px', marginBottom: '12px', justifyContent: 'center' }}>
-          <button className="quick-action-chip" onClick={() => handleSend('Sync latest trends')} disabled={isTyping} style={{ padding: '6px 12px', borderRadius: '16px', border: '1px solid var(--border)', background: 'var(--surface-raised)', fontSize: '12px', cursor: 'pointer', color: 'var(--text-secondary)' }}>🔄 Sync Trends</button>
-          <button className="quick-action-chip" onClick={() => handleSend('Generate briefs for top trends')} disabled={isTyping} style={{ padding: '6px 12px', borderRadius: '16px', border: '1px solid var(--border)', background: 'var(--surface-raised)', fontSize: '12px', cursor: 'pointer', color: 'var(--text-secondary)' }}>📝 Generate Briefs</button>
+          <button className="quick-action-chip" onClick={() => handleSend('Sync latest trends')} disabled={isTyping} style={{ padding: '6px 12px', borderRadius: '16px', border: '1px solid var(--hairline)', background: 'var(--surface-card)', fontSize: '12px', cursor: 'pointer', color: 'var(--body)' }}>Sync Trends</button>
+          <button className="quick-action-chip" onClick={() => handleSend('Generate briefs for top trends')} disabled={isTyping} style={{ padding: '6px 12px', borderRadius: '16px', border: '1px solid var(--hairline)', background: 'var(--surface-card)', fontSize: '12px', cursor: 'pointer', color: 'var(--body)' }}>Generate Briefs</button>
         </div>
         <div className="chat-input-box">
           <input 

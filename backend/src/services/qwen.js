@@ -11,9 +11,10 @@ const MAX_RETRIES = 3;
  * - Times out each attempt at 15s
  * - Falls back to mock if QWEN_API_KEY is not set
  */
-async function callQwenJSON(prompt) {
-  if (!process.env.QWEN_API_KEY) {
-    console.warn('[Qwen] No QWEN_API_KEY found — using mock response');
+async function callQwenJSON(prompt, userApiKey) {
+  const apiKey = userApiKey || process.env.QWEN_API_KEY;
+  if (!apiKey) {
+    console.warn('[Qwen] No API key found — using mock response');
     return getMockBrief(prompt);
   }
 
@@ -29,7 +30,7 @@ async function callQwenJSON(prompt) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${process.env.QWEN_API_KEY}`,
+          Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify(bodyPayload),
       }),
@@ -80,10 +81,11 @@ function getMockBrief(prompt) {
   };
 }
 
-async function callQwenChat(messages) {
-  if (!process.env.QWEN_API_KEY) {
-    console.warn('[Qwen] No QWEN_API_KEY found — using mock chat response');
-    return "This is a mock chat response. Please add your QWEN_API_KEY to the .env file to enable the real AI assistant.";
+async function callQwenChat(messages, userApiKey) {
+  const apiKey = userApiKey || process.env.QWEN_API_KEY;
+  if (!apiKey) {
+    console.warn('[Qwen] No API key found — using mock chat response');
+    return "This is a mock chat response. Please add your API key in the settings to enable the real AI assistant.";
   }
 
   return withRetry(async () => {
@@ -98,7 +100,7 @@ async function callQwenChat(messages) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${process.env.QWEN_API_KEY}`,
+          Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify(bodyPayload),
       }),

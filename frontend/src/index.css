@@ -70,6 +70,7 @@ button {
   border: none;
   background: transparent;
   padding: 0;
+  color: inherit;
 }
 
 input, textarea {
@@ -77,6 +78,7 @@ input, textarea {
   border: none;
   outline: none;
   background: transparent;
+  color: inherit;
 }
 
 /* Scrollbars */
