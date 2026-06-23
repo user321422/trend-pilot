@@ -1,19 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 import { callQwenJSON } from "./qwen.js";
+import googleTrends from "google-trends-api";
 
 const prisma = new PrismaClient();
-
-// Fallback seed data so the demo works even if external APIs are down
-const MOCK_TRENDS = [
-  { title: "AI Agents replacing SaaS tools", source: "google_trends", volume: 95 },
-  { title: "Vibe coding with Claude", source: "google_trends", volume: 88 },
-  { title: "OpenAI GPT-5 release", source: "reddit", volume: 76 },
-  { title: "Cursor vs Copilot debate", source: "reddit", volume: 70 },
-  { title: "Startup valuations in 2026", source: "google_trends", volume: 65 },
-  { title: "Cloud cost optimization tips", source: "google_trends", volume: 60 },
-  { title: "SEO is dead or not", source: "reddit", volume: 55 },
-  { title: "Data privacy new regulations", source: "google_trends", volume: 50 },
-];
 
 async function analyzeTrendWithAgent1(trendTitle, source, userApiKey) {
   const prompt = `You are Agent 1, the Trend Scorer for a B2B Tech / SaaS content publication.
@@ -43,18 +32,100 @@ Evaluate this topic and return a JSON object with strictly the following keys:
   }
 }
 
+async function fetchRedditTrends() {
+  const subreddits = ["SaaS", "technology", "artificial", "webdev"];
+  const trends = [];
+  for (const sub of subreddits) {
+    try {
+      const response = await fetch(`https://www.reddit.com/r/${sub}/hot.json?limit=5`);
+      if (!response.ok) continue;
+      const data = await response.json();
+      data.data.children.forEach(post => {
+        if (!post.data.stickied) {
+          trends.push({
+            title: post.data.title,
+            source: `reddit (r/${sub})`,
+            volume: post.data.ups || 10,
+            url: `https://reddit.com${post.data.permalink}`
+          });
+        }
+      });
+    } catch (error) {
+      console.error(`Failed to fetch Reddit trends for r/${sub}:`, error.message);
+    }
+  }
+  return trends;
+}
+
+async function fetchGoogleTrends() {
+  const keywords = ["AI Agents", "SaaS", "OpenAI", "Next.js", "Web Development", "Vibe Coding"];
+  const trends = [];
+  
+  for (const kw of keywords) {
+    try {
+      // Add a small delay to prevent Google from rate limiting / blocking us
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      const res = await googleTrends.interestOverTime({ keyword: kw, startTime: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) });
+      
+      // If Google blocked the request, it returns an HTML page instead of JSON.
+      if (res.trim().startsWith('<')) {
+        throw new Error("Google Trends rate limit hit (returned HTML).");
+      }
+      
+      const data = JSON.parse(res);
+      const timelineData = data.default.timelineData;
+      if (timelineData && timelineData.length > 0) {
+        const latestVolume = timelineData[timelineData.length - 1].value[0];
+        trends.push({
+          title: kw,
+          source: "google_trends",
+          volume: latestVolume || 10,
+        });
+      } else {
+        throw new Error("No timeline data found.");
+      }
+    } catch (error) {
+      console.error(`Google API blocked "${kw}", using fallback data.`);
+      // Fallback: If Google blocks the request, we provide realistic mock data
+      // so the demo continues to work seamlessly without an empty UI.
+      trends.push({
+        title: kw,
+        source: "google_trends (fallback)",
+        volume: Math.floor(Math.random() * 50) + 40, // Random volume between 40-90
+      });
+    }
+  }
+  return trends;
+}
+
 export async function fetchAndStoreTrends(userApiKey) {
-  console.log("Fetching trends...");
+  console.log("Fetching live trends...");
 
-  const sourceMax = Math.max(...MOCK_TRENDS.map((t) => t.volume));
+  const [redditTrends, googleTrendsData] = await Promise.all([
+    fetchRedditTrends(),
+    fetchGoogleTrends()
+  ]);
 
+  let rawTrends = [...redditTrends, ...googleTrendsData];
+
+  if (rawTrends.length === 0) {
+    console.log("No live trends found, returning empty.");
+    return [];
+  }
+
+  // To prevent the request from timing out while waiting for the AI to analyze all topics,
+  // limit the number of trends to process in this run to 10.
+  rawTrends = rawTrends.slice(0, 10);
+
+  // Calculate global max volume for normalization
+  const sourceMax = Math.max(...rawTrends.map((t) => t.volume));
+  
   const stored = [];
 
-  for (const raw of MOCK_TRENDS) {
-    // 1. Calculate basic trend volume score
-    const trendScore = Math.min((raw.volume / sourceMax) * 100, 100);
+  for (const raw of rawTrends) {
+    const trendScore = Math.min((raw.volume / (sourceMax || 1)) * 100, 100);
 
-    // 2. Delegate deep semantic analysis to Agent 1
     const aiAnalysis = await analyzeTrendWithAgent1(raw.title, raw.source, userApiKey);
 
     const trend = await prisma.trend.upsert({
@@ -79,6 +150,6 @@ export async function fetchAndStoreTrends(userApiKey) {
     stored.push(trend);
   }
 
-  console.log(`Stored ${stored.length} trends.`);
+  console.log(`Stored ${stored.length} live trends.`);
   return stored;
 }
