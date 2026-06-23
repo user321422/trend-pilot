@@ -32,7 +32,7 @@ function validate(schema) {
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 
-// POST /publish/schedule — Admin/Editor only
+// POST /publish/schedule
 router.post(
   '/schedule',
   requireAuth,

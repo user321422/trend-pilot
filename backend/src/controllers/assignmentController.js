@@ -2,23 +2,7 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-// Score a writer against a brief to find best match
-function scoreWriter(writer, brief) {
-  const expertiseMatch =
-    writer.expertiseTags.length === 0
-      ? 0
-      : writer.expertiseTags.filter((tag) =>
-          brief.seoKeywords.some((k) =>
-            k.toLowerCase().includes(tag.toLowerCase()) ||
-            tag.toLowerCase().includes(k.toLowerCase())
-          )
-        ).length / writer.expertiseTags.length;
 
-  const availabilityScore = writer.currentLoad < writer.maxLoad ? 1 : 0;
-  const performanceScore = writer.historicalRating / 5;
-
-  return expertiseMatch * 0.5 + availabilityScore * 0.3 + performanceScore * 0.2;
-}
 
 // GET /assignments/recommend/:briefId — top 3 writer matches
 export async function recommendWriters(req, res) {
@@ -36,18 +20,13 @@ export async function recommendWriters(req, res) {
   const writers = await prisma.user.findMany();
 
   const scored = writers
-    .map((w) => ({ writer: w, score: scoreWriter(w, brief) }))
-    .sort((a, b) => b.score - a.score)
+    .sort((a, b) => a.currentLoad - b.currentLoad)
     .slice(0, 3)
-    .map(({ writer, score }) => ({
+    .map((writer) => ({
       id: writer.id,
       name: writer.name,
       email: writer.email,
-      expertiseTags: writer.expertiseTags,
-      historicalRating: writer.historicalRating,
       currentLoad: writer.currentLoad,
-      maxLoad: writer.maxLoad,
-      matchScore: Math.round(score * 100),
     }));
 
   return res.json({ briefId, recommendations: scored });
@@ -69,9 +48,6 @@ export async function createAssignment(req, res) {
 
   const writer = await prisma.user.findUnique({ where: { id: writerId } });
   if (!writer) return res.status(404).json({ error: "Writer not found" });
-  if (writer.currentLoad >= writer.maxLoad) {
-    return res.status(400).json({ error: "Writer is at maximum load" });
-  }
 
   // Create assignment and draft placeholder in one transaction
   const assignment = await prisma.$transaction(async (tx) => {

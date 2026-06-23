@@ -18,7 +18,7 @@ async function main() {
     data: [
       {
         name: 'Super Admin',
-        email: 'admin@trendpilot.com',
+        email: 'admin',
         passwordHash,
       },
       {
@@ -36,46 +36,31 @@ async function main() {
         name: 'Alice Techwriter',
         email: 'alice@trendpilot.com',
         passwordHash,
-        expertiseTags: ['Technology', 'AI', 'SaaS', 'Programming'],
-        historicalRating: 4.8,
         currentLoad: 1,
-        maxLoad: 3
       },
       {
         name: 'Bob Marketer',
         email: 'bob@trendpilot.com',
         passwordHash,
-        expertiseTags: ['Marketing', 'SEO', 'Social Media', 'Growth'],
-        historicalRating: 4.2,
         currentLoad: 0,
-        maxLoad: 4
       },
       {
         name: 'Charlie Overloaded',
         email: 'charlie@trendpilot.com',
         passwordHash,
-        expertiseTags: ['Finance', 'Crypto', 'Economics'],
-        historicalRating: 4.9,
-        currentLoad: 3, // At max load!
-        maxLoad: 3
+        currentLoad: 3,
       },
       {
         name: 'Diana Generalist',
         email: 'diana@trendpilot.com',
         passwordHash,
-        expertiseTags: ['Lifestyle', 'Health', 'Productivity'],
-        historicalRating: 3.8,
         currentLoad: 0,
-        maxLoad: 5
       },
       {
         name: 'Evan Junior',
         email: 'evan@trendpilot.com',
         passwordHash,
-        expertiseTags: ['Technology', 'Gaming'],
-        historicalRating: 3.5, // Lower rating
         currentLoad: 0,
-        maxLoad: 2
       }
     ]
   });

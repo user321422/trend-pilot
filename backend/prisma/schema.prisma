@@ -7,9 +7,6 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-
-
-
 enum BriefStatus {
   PENDING
   APPROVED
@@ -28,10 +25,7 @@ model User {
   name             String
   email            String       @unique
   passwordHash     String
-  expertiseTags    String[]     @default([])
-  historicalRating Float        @default(3.0)
   currentLoad      Int          @default(0)
-  maxLoad          Int          @default(3)
   assignments      Assignment[]
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
