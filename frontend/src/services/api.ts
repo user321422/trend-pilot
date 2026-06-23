@@ -49,10 +49,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  expertiseTags: string[];
-  historicalRating: number;
   currentLoad: number;
-  maxLoad: number;
 }
 
 export const auth = {
