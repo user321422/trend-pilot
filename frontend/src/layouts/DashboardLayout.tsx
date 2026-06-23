@@ -71,7 +71,6 @@ export default function DashboardLayout() {
             </div>
             <div className="user-info">
               <span className="user-name">{user.name}</span>
-              <span className="user-role">{user.role?.toLowerCase() || 'user'}</span>
             </div>
           </button>
           

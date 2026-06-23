@@ -18,11 +18,11 @@ export async function register(req, res) {
 
   const user = await prisma.user.create({
     data: { name, email, passwordHash },
-    select: { id: true, name: true, email: true, role: true, createdAt: true },
+    select: { id: true, name: true, email: true, createdAt: true },
   });
 
   const token = jwt.sign(
-    { sub: user.id, email: user.email, role: user.role },
+    { sub: user.id, email: user.email },
     process.env.JWT_SECRET,
     { expiresIn: JWT_EXPIRY }
   );
@@ -43,13 +43,13 @@ export async function login(req, res) {
   }
 
   const token = jwt.sign(
-    { sub: user.id, email: user.email, role: user.role },
+    { sub: user.id, email: user.email },
     process.env.JWT_SECRET,
     { expiresIn: JWT_EXPIRY }
   );
 
   return res.json({
-    user: { id: user.id, name: user.name, email: user.email, role: user.role },
+    user: { id: user.id, name: user.name, email: user.email },
     token,
   });
 }

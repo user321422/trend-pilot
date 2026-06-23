@@ -16,7 +16,7 @@ export default function Profile() {
         <div style={{ display: 'grid', gap: '16px', fontSize: '15px', color: 'var(--body)' }}>
           <div><strong style={{ color: 'var(--body-strong)' }}>Name:</strong> {user?.name}</div>
           <div><strong style={{ color: 'var(--body-strong)' }}>Email:</strong> {user?.email}</div>
-          <div><strong style={{ color: 'var(--body-strong)' }}>Role:</strong> <span style={{ textTransform: 'capitalize' }}>{user?.role?.toLowerCase()}</span></div>
+
         </div>
       </div>
     </div>

@@ -8,9 +8,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  ADMIN
-}
+
 
 enum BriefStatus {
   PENDING
@@ -30,7 +28,6 @@ model User {
   name             String
   email            String       @unique
   passwordHash     String
-  role             Role         @default(ADMIN)
   expertiseTags    String[]     @default([])
   historicalRating Float        @default(3.0)
   currentLoad      Int          @default(0)
@@ -66,6 +63,7 @@ model Brief {
   h1               String?
   headingStructure Json?
   wordCount        Int?
+  publishingGuidance String?
   status           BriefStatus  @default(PENDING)
   assignments      Assignment[]
   createdAt        DateTime     @default(now())

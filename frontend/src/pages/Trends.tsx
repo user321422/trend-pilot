@@ -1,9 +1,37 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTrends } from '../hooks/useTrends';
+import { useBriefs } from '../hooks/useBriefs';
 
 export default function Trends() {
+  const navigate = useNavigate();
   const { data: trendData, isLoading, refresh } = useTrends();
+  const { generate, autoGenerate } = useBriefs();
+  
+  const [generatingId, setGeneratingId] = useState<string | null>(null);
+  const [autoGenerating, setAutoGenerating] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [researchStep, setResearchStep] = useState(0);
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const steps = [
+    "Searching trend sources...",
+    "Analyzing Google Trends...",
+    "Reviewing Reddit discussions...",
+    "Ranking opportunities...",
+    "Generating recommendations..."
+  ];
+
+  useEffect(() => {
+    if (refreshing) {
+      setResearchStep(0);
+      setIsExpanded(false);
+      const interval = setInterval(() => {
+        setResearchStep(prev => Math.min(prev + 1, steps.length - 1));
+      }, 1500); // simulate 1.5s per step
+      return () => clearInterval(interval);
+    }
+  }, [refreshing]);
 
   async function handleSync() {
     setRefreshing(true);
@@ -17,25 +45,77 @@ export default function Trends() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '40px' }}>
         <div>
           <h1 style={{ fontFamily: 'var(--display)', fontSize: '36px', margin: '0 0 8px', color: 'var(--ink)' }}>Trends & Sync</h1>
-          <p style={{ color: 'var(--body)', fontSize: '16px' }}>Agent 1: Discovering and scoring high-opportunity topics.</p>
+          <p style={{ color: 'var(--body)', fontSize: '16px' }}>Trendy: Discovering and scoring high-opportunity topics.</p>
         </div>
-        <button 
-          className="button outline" 
-          onClick={handleSync} 
-          disabled={refreshing}
-          style={{ height: '40px', padding: '0 16px', border: '1px solid var(--hairline)', borderRadius: '6px', background: 'var(--surface-card)', color: 'var(--ink)', cursor: 'pointer', fontWeight: 500 }}
-        >
-          {refreshing ? 'Syncing...' : 'Sync Live Sources'}
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button 
+            className="button outline" 
+            onClick={async () => {
+              setAutoGenerating(true);
+              try {
+                const res = await autoGenerate();
+                if (res.count > 0) {
+                  navigate('/briefs');
+                } else {
+                  alert((res as any).message || "No available trends to generate briefs for.");
+                }
+              } catch (e: any) {
+                alert(e.message);
+              }
+              setAutoGenerating(false);
+            }} 
+            disabled={autoGenerating || refreshing}
+            style={{ height: '40px', padding: '0 16px', border: '1px solid var(--hairline)', borderRadius: '6px', background: 'var(--primary)', color: 'white', cursor: 'pointer', fontWeight: 500 }}
+          >
+            {autoGenerating ? 'Agent 2 Generating...' : 'Auto-Generate Top 3'}
+          </button>
+          <button 
+            className="button outline" 
+            onClick={handleSync} 
+            disabled={refreshing || autoGenerating}
+            style={{ height: '40px', padding: '0 16px', border: '1px solid var(--hairline)', borderRadius: '6px', background: 'var(--surface-card)', color: 'var(--ink)', cursor: 'pointer', fontWeight: 500 }}
+          >
+            {refreshing ? 'Syncing...' : 'Sync Live Sources'}
+          </button>
+        </div>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         {refreshing ? (
-          <div style={{ padding: '64px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-card)', borderRadius: '12px', border: '1px solid var(--hairline)', position: 'relative', overflow: 'hidden' }}>
-            <div className="radar-scanner"></div>
-            <img src="/mascot.png" alt="Trendy Mascot" className="mascot-sprite" />
-            <h3 style={{ margin: '0 0 12px', fontSize: '20px', color: 'var(--ink)' }}>Agent 1 is scanning live sources</h3>
-            <p style={{ color: 'var(--muted)', fontSize: '15px', fontFamily: 'var(--mono)' }}>Analyzing semantic relevance & calculating opportunity scores...</p>
+          <div className="reasoning-container" style={{ background: 'transparent', border: 'none', padding: '16px 0' }}>
+            <div 
+              className="reasoning-header" 
+              onClick={() => setIsExpanded(!isExpanded)}
+              style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '12px 16px', background: 'var(--surface-card)', border: '1px solid var(--hairline)', borderRadius: '20px', width: 'fit-content' }}
+            >
+              <div className="reasoning-spinner" style={{ width: '14px', height: '14px', borderWidth: '1.5px' }}></div>
+              <span style={{ fontSize: '14px', color: 'var(--body)' }}>{isExpanded ? "Trendy is actively researching..." : steps[researchStep]}</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '16px', height: '16px', transform: isExpanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', color: 'var(--muted)', marginLeft: '8px' }}><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </div>
+            
+            {isExpanded && (
+              <div className="collapsible-section" style={{ marginTop: '8px', border: 'none' }}>
+                <div className="collapsible-content" style={{ padding: '16px', background: 'var(--surface-card)', border: '1px solid var(--hairline)', borderRadius: '8px', gap: '12px' }}>
+                  {steps.map((step, idx) => (
+                    idx <= researchStep && (
+                      <div key={idx} className={`reasoning-step ${idx === researchStep ? 'active' : 'completed'}`}>
+                        <div className="step-icon">
+                          {idx < researchStep ? (
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                          ) : (
+                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--primary)', animation: 'pulse 1.5s infinite' }}></div>
+                          )}
+                        </div>
+                        <span>{step}</span>
+                      </div>
+                    )
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="skeleton" style={{ height: '80px', marginTop: '24px' }}></div>
+            <div className="skeleton" style={{ height: '80px', marginTop: '16px' }}></div>
           </div>
         ) : isLoading ? (
           <div style={{ padding: '24px', textAlign: 'center', color: 'var(--muted)' }}>Loading trends...</div>
@@ -61,10 +141,28 @@ export default function Trends() {
               </div>
               {trend.aiExplanation && (
                 <div style={{ marginTop: '16px', padding: '16px', background: 'var(--canvas)', border: '1px solid var(--hairline)', borderRadius: '6px', fontSize: '14px', color: 'var(--body)', lineHeight: 1.6 }}>
-                  <strong style={{ color: 'var(--ink)', display: 'block', marginBottom: '4px' }}>Agent 1 Insight:</strong>
+                  <strong style={{ color: 'var(--ink)', display: 'block', marginBottom: '4px' }}>Trendy Insight:</strong>
                   {trend.aiExplanation}
                 </div>
               )}
+              <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  onClick={async () => {
+                    setGeneratingId(trend.id);
+                    try {
+                      await generate(trend.id);
+                      navigate('/briefs');
+                    } catch (e: any) {
+                      alert(e.message);
+                    }
+                    setGeneratingId(null);
+                  }}
+                  disabled={generatingId === trend.id}
+                  style={{ height: '36px', padding: '0 16px', border: 'none', borderRadius: '6px', background: 'var(--primary)', color: 'white', cursor: 'pointer', fontWeight: 500, fontSize: '14px' }}
+                >
+                  {generatingId === trend.id ? 'Agent 2 Drafting...' : 'Select & Generate Brief'}
+                </button>
+              </div>
             </div>
           ))
         )}

@@ -49,7 +49,6 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'ADMIN' | 'EDITOR' | 'WRITER';
   expertiseTags: string[];
   historicalRating: number;
   currentLoad: number;
@@ -105,6 +104,7 @@ export interface Brief {
   h1?: string;
   headingStructure?: HeadingBlock[];
   wordCount?: number;
+  publishingGuidance?: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   createdAt: string;
 }
@@ -112,9 +112,11 @@ export interface Brief {
 export const briefs = {
   generate: (trendId: string) =>
     post<{ brief: Brief }>('/briefs/generate', { trendId }),
+  autoGenerate: () =>
+    post<{ count: number; briefs: Brief[] }>('/briefs/auto-generate', {}),
   approve:  (id: string, status: 'APPROVED' | 'REJECTED', edits?: Partial<Brief>) =>
     patch<{ brief: Brief }>('/briefs/approve', { id, status, ...edits }),
-  list:     ()               => get<{ briefs: Brief[] }>('/briefs'),
+  list:     ()               => get<{ count: number; briefs: Brief[] }>('/briefs'),
 };
 
 // ─────────────────────────────────────────────────────────────────────────────

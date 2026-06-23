@@ -33,9 +33,7 @@ export async function recommendWriters(req, res) {
     return res.status(400).json({ error: "Brief must be APPROVED before assigning a writer" });
   }
 
-  const writers = await prisma.user.findMany({
-    where: { role: "WRITER" },
-  });
+  const writers = await prisma.user.findMany();
 
   const scored = writers
     .map((w) => ({ writer: w, score: scoreWriter(w, brief) }))

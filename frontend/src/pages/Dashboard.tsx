@@ -9,6 +9,60 @@ type Message = {
   content: string | React.ReactNode;
 };
 
+function ThinkingProgress() {
+  const [step, setStep] = useState(0);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const steps = [
+    "Analyzing user request...",
+    "Querying knowledge base...",
+    "Reviewing content operations parameters...",
+    "Structuring response...",
+    "Generating insights..."
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setStep(prev => Math.min(prev + 1, steps.length - 1));
+    }, 1200);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="reasoning-container" style={{ width: '100%', marginTop: 0, padding: 0, background: 'transparent', border: 'none' }}>
+      <div 
+        className="reasoning-header" 
+        onClick={() => setIsExpanded(!isExpanded)}
+        style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'var(--surface-card)', border: '1px solid var(--hairline)', borderRadius: '20px', width: 'fit-content' }}
+      >
+        <div className="reasoning-spinner" style={{ width: '14px', height: '14px', borderWidth: '1.5px' }}></div>
+        <span style={{ fontSize: '13px', color: 'var(--body)' }}>{isExpanded ? "Trendy is reasoning..." : steps[step]}</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '14px', height: '14px', transform: isExpanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', color: 'var(--muted)', marginLeft: '4px' }}><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </div>
+      
+      {isExpanded && (
+        <div className="collapsible-section" style={{ border: 'none', marginTop: '12px' }}>
+          <div className="collapsible-content" style={{ padding: '0', background: 'transparent', border: 'none', gap: '8px' }}>
+            {steps.map((s, idx) => (
+              idx <= step && (
+                <div key={idx} className={`reasoning-step ${idx === step ? 'active' : 'completed'}`} style={{ fontSize: '13px' }}>
+                  <div className="step-icon">
+                    {idx < step ? (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    ) : (
+                      <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--primary)', animation: 'pulse 1.5s infinite' }}></div>
+                    )}
+                  </div>
+                  <span>{s}</span>
+                </div>
+              )
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const { data: trendData, refresh } = useTrends();
   const [messages, setMessages] = useState<Message[]>([
@@ -144,8 +198,8 @@ export default function Dashboard() {
           {isTyping && (
             <div className="message ai">
               <div className="message-avatar">T</div>
-              <div className="message-content" style={{ color: 'var(--muted)' }}>
-                Thinking...
+              <div className="message-content" style={{ width: '100%', maxWidth: '100%', paddingTop: 0 }}>
+                <ThinkingProgress />
               </div>
             </div>
           )}
