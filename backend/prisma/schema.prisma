@@ -21,14 +21,16 @@ enum AssignmentStatus {
 }
 
 model User {
-  id               String       @id @default(cuid())
-  name             String
-  email            String       @unique
-  passwordHash     String
-  currentLoad      Int          @default(0)
-  assignments      Assignment[]
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
+  id             String       @id @default(cuid())
+  name           String
+  email          String       @unique
+  passwordHash   String
+  currentLoad    Int          @default(0)
+  completedCount Int          @default(0) 
+  avgReviewScore Float        @default(0.0)   
+  assignments    Assignment[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 }
 
 model Trend {

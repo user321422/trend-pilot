@@ -1,14 +1,24 @@
+// backend/src/controllers/assignmentController.js
+
 import { PrismaClient } from "@prisma/client";
+import { recommendWriters as runRecommender } from "../services/writerRecommender.js";
 
 const prisma = new PrismaClient();
 
-
-
-// GET /assignments/recommend/:briefId — top 3 writer matches
+// ── GET /assignments/recommend?briefId=<id> ────────────────────────────────
 export async function recommendWriters(req, res) {
-  const { briefId } = req.params;
+  const { briefId } = req.query;
 
-  const brief = await prisma.brief.findUnique({ where: { id: briefId } });
+  if (!briefId) {
+    return res.status(400).json({ error: "briefId query parameter is required" });
+  }
+
+  const brief = await prisma.brief.findUnique({
+    where: { id: briefId },
+    include: {
+      trend: { select: { title: true } }, // ✅ title lives on Trend
+    },
+  });
   if (!brief) {
     return res.status(404).json({ error: "Brief not found" });
   }
@@ -17,22 +27,32 @@ export async function recommendWriters(req, res) {
     return res.status(400).json({ error: "Brief must be APPROVED before assigning a writer" });
   }
 
-  const writers = await prisma.user.findMany();
+  const writers = await prisma.user.findMany({
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      currentLoad: true,
+      completedCount: true,
+      avgReviewScore: true,
+    },
+    orderBy: { currentLoad: "asc" },
+  });
 
-  const scored = writers
-    .sort((a, b) => a.currentLoad - b.currentLoad)
-    .slice(0, 3)
-    .map((writer) => ({
-      id: writer.id,
-      name: writer.name,
-      email: writer.email,
-      currentLoad: writer.currentLoad,
-    }));
+  if (writers.length === 0) {
+    return res.status(404).json({ error: "No writers found in the system" });
+  }
 
-  return res.json({ briefId, recommendations: scored });
+  const recommendations = await runRecommender(brief, writers);
+
+  return res.json({
+    briefId,
+    briefTitle: brief.trend.title, // ✅ was brief.title
+    recommendations,
+  });
 }
 
-// POST /assignments — assign a brief to a writer
+// ── POST /assignments — assign a brief to a writer ─────────────────────────
 export async function createAssignment(req, res) {
   const { briefId, writerId } = req.body;
 
@@ -49,7 +69,6 @@ export async function createAssignment(req, res) {
   const writer = await prisma.user.findUnique({ where: { id: writerId } });
   if (!writer) return res.status(404).json({ error: "Writer not found" });
 
-  // Create assignment and draft placeholder in one transaction
   const assignment = await prisma.$transaction(async (tx) => {
     const a = await tx.assignment.create({
       data: { briefId, writerId, status: "ASSIGNED" },
@@ -70,11 +89,25 @@ export async function createAssignment(req, res) {
   return res.status(201).json({ assignment });
 }
 
-// GET /assignments — list all assignments
+// ── GET /assignments — list all assignments ────────────────────────────────
 export async function listAssignments(req, res) {
   const assignments = await prisma.assignment.findMany({
     include: {
-      brief: { select: { id: true, h1: true, status: true } },
+      brief: {
+        select: {
+          id: true,
+          status: true,
+          h1: true,          // ✅ the brief's SEO headline
+          angle: true,
+          summary: true,
+          trend: {
+            select: {
+              id: true,
+              title: true,   // ✅ trend title as the display title
+            },
+          },
+        },
+      },
       writer: { select: { id: true, name: true, email: true } },
       draft: { select: { id: true, submittedAt: true } },
     },

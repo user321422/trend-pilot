@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN     "avgReviewScore" DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+ADD COLUMN     "completedCount" INTEGER NOT NULL DEFAULT 0;

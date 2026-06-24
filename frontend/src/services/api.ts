@@ -33,7 +33,7 @@ async function request<T>(
 }
 
 // ── Convenience wrappers ──────────────────────────────────────────────────────
-const get  = <T>(path: string)              => request<T>(path);
+const get = <T>(path: string) => request<T>(path);
 const post = <T>(path: string, body: unknown) =>
   request<T>(path, { method: 'POST', body: JSON.stringify(body) });
 const patch = <T>(path: string, body: unknown) =>
@@ -42,18 +42,20 @@ const patch = <T>(path: string, body: unknown) =>
 // ─────────────────────────────────────────────────────────────────────────────
 // Auth
 // ─────────────────────────────────────────────────────────────────────────────
-export interface LoginPayload  { email: string; password: string }
-export interface AuthResponse  { token: string; user: User }
+export interface LoginPayload { email: string; password: string }
+export interface AuthResponse { token: string; user: User }
 
 export interface User {
   id: string;
   name: string;
   email: string;
   currentLoad: number;
+  completedCount: number;  // ← NEW
+  avgReviewScore: number;  // ← NEW
 }
 
 export const auth = {
-  login:    (p: LoginPayload)   => post<AuthResponse>('/auth/login', p),
+  login: (p: LoginPayload) => post<AuthResponse>('/auth/login', p),
   register: (p: Partial<User> & { password: string }) =>
     post<AuthResponse>('/auth/register', p),
 };
@@ -75,15 +77,15 @@ export interface Trend {
 export interface TrendsResponse { count: number; trends: Trend[] }
 
 export const trends = {
-  list:    (sort?: string, source?: string) => {
+  list: (sort?: string, source?: string) => {
     const params = new URLSearchParams();
-    if (sort)   params.set('sort', sort);
+    if (sort) params.set('sort', sort);
     if (source) params.set('source', source);
     const qs = params.toString();
     return get<TrendsResponse>(`/trends${qs ? `?${qs}` : ''}`);
   },
-  get:     (id: string) => get<Trend>(`/trends/${id}`),
-  refresh: ()           => post<{ message: string; count: number }>('/trends/refresh', {}),
+  get: (id: string) => get<Trend>(`/trends/${id}`),
+  refresh: () => post<{ message: string; count: number }>('/trends/refresh', {}),
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -111,9 +113,10 @@ export const briefs = {
     post<{ brief: Brief }>('/briefs/generate', { trendId }),
   autoGenerate: () =>
     post<{ count: number; briefs: Brief[] }>('/briefs/auto-generate', {}),
-  approve:  (id: string, status: 'APPROVED' | 'REJECTED', edits?: Partial<Brief>) =>
+  approve: (id: string, status: 'APPROVED' | 'REJECTED', edits?: Partial<Brief>) =>
     patch<{ brief: Brief }>('/briefs/approve', { id, status, ...edits }),
-  list:     ()               => get<{ count: number; briefs: Brief[] }>('/briefs'),
+  list: () => get<{ count: number; briefs: Brief[] }>('/briefs'),
+  approved: () => get<{ count: number; briefs: Brief[] }>('/briefs?status=APPROVED'), // ← NEW
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -129,12 +132,33 @@ export interface Assignment {
   brief?: Brief;
 }
 
+// ← NEW: replaces the old `{ writers: User[] }` shape
+export interface WriterRecommendation {
+  writerId: string;
+  name: string;
+  email: string;
+  currentLoad: number;
+  completedCount: number;
+  avgReviewScore: number;
+  matchScore: number;
+  reasoning: string;
+}
+
+// ← NEW
+export interface RecommendResponse {
+  briefId: string;
+  briefTitle: string;
+  recommendations: WriterRecommendation[];
+}
+
 export const assignments = {
-  create:    (briefId: string, writerId: string) =>
+  create: (briefId: string, writerId: string) =>
     post<{ assignment: Assignment }>('/assignments', { briefId, writerId }),
+
   recommend: (briefId: string) =>
-    get<{ writers: User[] }>(`/assignments/recommend?briefId=${briefId}`),
-  list:      ()                 => get<{ assignments: Assignment[] }>('/assignments'),
+    get<RecommendResponse>(`/assignments/recommend?briefId=${briefId}`), // ← return type updated
+
+  list: () => get<{ assignments: Assignment[] }>('/assignments'),
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -155,7 +179,7 @@ export interface Review {
 export const reviews = {
   analyze: (draftId: string) =>
     post<{ review: Review }>('/reviews/analyze', { draftId }),
-  get:     (draftId: string) => get<Review>(`/reviews/${draftId}`),
+  get: (draftId: string) => get<Review>(`/reviews/${draftId}`),
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
