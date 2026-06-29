@@ -47,8 +47,20 @@ function WriterCard({
             <span style={{ color: 'var(--ink)', fontWeight: 600, fontSize: 16 }}>
               {rec.name}
             </span>
+            {rec.email.endsWith('.internal') && (
+              <span style={{
+                fontSize: 10,
+                background: 'var(--accent-soft)',
+                color: 'var(--accent)',
+                padding: '2px 8px',
+                borderRadius: 4,
+                fontWeight: 600
+              }}>AI AGENT</span>
+            )}
           </div>
-          <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 2 }}>{rec.email}</div>
+          {!rec.email.endsWith('.internal') && (
+            <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 2 }}>{rec.email}</div>
+          )}
         </div>
 
         <div
@@ -154,6 +166,7 @@ function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { bg: string; color: string }> = {
     ASSIGNED: { bg: '#dbeafe', color: '#1e40af' },
     IN_PROGRESS: { bg: '#fef3c7', color: '#92400e' },
+    SUBMITTED: { bg: '#e0f2fe', color: '#0369a1' },
     COMPLETED: { bg: '#d1fae5', color: '#065f46' },
     CANCELLED: { bg: '#fee2e2', color: '#991b1b' },
   };
@@ -186,15 +199,34 @@ export default function Assignments() {
   const [loadingBriefs, setLoadingBriefs] = useState(true);
   const [loadingRec, setLoadingRec] = useState(false);
   const [assigningId, setAssigningId] = useState<string | null>(null);
+  const [writingId, setWritingId] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+
+  async function handleTriggerAIWrite(assignmentId: string) {
+    setWritingId(assignmentId);
+    setError('');
+    setSuccessMsg('');
+    try {
+      const res = await assignmentsApi.write(assignmentId);
+      setSuccessMsg('✍ AI Draft generated successfully! You can review it in Draft Reviews.');
+      setAssignmentList(prev => prev.map(item => item.id === assignmentId ? res.assignment : item));
+      setTimeout(() => setSuccessMsg(''), 5000);
+    } catch (e: any) {
+      setError(e.message || 'Failed to write draft');
+    } finally {
+      setWritingId(null);
+    }
+  }
 
   // Load approved briefs + existing assignments on mount
   useEffect(() => {
     Promise.all([briefsApi.approved(), assignmentsApi.list()])
       .then(([briefsRes, assignsRes]) => {
-        setApprovedBriefs(briefsRes.briefs ?? briefsRes);
-        setAssignmentList(assignsRes.assignments ?? assignsRes);
+        const briefsList = Array.isArray(briefsRes) ? briefsRes : (briefsRes.briefs || []);
+        const assignsList = Array.isArray(assignsRes) ? assignsRes : (assignsRes.assignments || []);
+        setApprovedBriefs(briefsList);
+        setAssignmentList(assignsList);
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoadingBriefs(false));
@@ -399,11 +431,47 @@ export default function Assignments() {
                   <div style={{ fontWeight: 600, color: 'var(--ink)', fontSize: 14 }}>
                     {a.brief?.h1 ?? a.briefId}  {/* ← h1 not title */}
                   </div>
-                  <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 2 }}>
-                    {a.writer?.name} · {a.writer?.email}
+                  <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 2, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span>{a.writer?.name}</span>
+                    {a.writer?.email?.endsWith('.internal') ? (
+                      <span style={{
+                        fontSize: 10,
+                        background: 'var(--accent-soft)',
+                        color: 'var(--accent)',
+                        padding: '1px 6px',
+                        borderRadius: 4,
+                        fontWeight: 600
+                      }}>AI AGENT</span>
+                    ) : (
+                      <>
+                        <span>·</span>
+                        <span>{a.writer?.email}</span>
+                      </>
+                    )}
                   </div>
                 </div>
-                <StatusBadge status={a.status} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  {a.status === 'ASSIGNED' && (
+                    <button
+                      onClick={() => handleTriggerAIWrite(a.id)}
+                      disabled={writingId === a.id}
+                      style={{
+                        padding: '6px 12px',
+                        background: 'var(--accent)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: 6,
+                        fontSize: 12,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        opacity: writingId === a.id ? 0.6 : 1
+                      }}
+                    >
+                      {writingId === a.id ? 'Writing...' : '✍ Trigger AI Writer'}
+                    </button>
+                  )}
+                  <StatusBadge status={a.status} />
+                </div>
               </div>
             ))}
           </div>

@@ -7,8 +7,10 @@ interface UseTrendsResult {
   count: number;
   isLoading: boolean;
   error: string | null;
+  syncInterval: number;
   refresh: () => Promise<void>;
   refetch: () => void;
+  updateSyncInterval: (minutes: number) => Promise<void>;
 }
 
 export function useTrends(sort?: string, source?: string): UseTrendsResult {
@@ -16,6 +18,7 @@ export function useTrends(sort?: string, source?: string): UseTrendsResult {
   const [count, setCount]     = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError]     = useState<string | null>(null);
+  const [syncInterval, setSyncInterval] = useState(60);
 
   const fetchTrends = useCallback(async () => {
     setIsLoading(true);
@@ -24,6 +27,8 @@ export function useTrends(sort?: string, source?: string): UseTrendsResult {
       const res: TrendsResponse = await trendsApi.list(sort, source);
       setData(res.trends);
       setCount(res.count);
+      const config = await trendsApi.getConfig();
+      setSyncInterval(config.intervalMinutes);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load trends');
     } finally {
@@ -45,5 +50,14 @@ export function useTrends(sort?: string, source?: string): UseTrendsResult {
     }
   };
 
-  return { data, count, isLoading, error, refresh, refetch: fetchTrends };
+  const updateSyncInterval = async (minutes: number) => {
+    try {
+      await trendsApi.updateConfig(minutes);
+      setSyncInterval(minutes);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to update sync interval');
+    }
+  };
+
+  return { data, count, isLoading, error, syncInterval, refresh, refetch: fetchTrends, updateSyncInterval };
 }

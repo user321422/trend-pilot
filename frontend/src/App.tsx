@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import DashboardLayout from './layouts/DashboardLayout';
+import Landing from './pages/Landing';
 import Dashboard from './pages/Dashboard';
 import Trends from './pages/Trends';
 import Briefs from './pages/Briefs';
@@ -37,11 +38,12 @@ function App() {
 
   return (
     <Routes>
+      <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
       <Route path="/about" element={<About />} />
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/terms" element={<Terms />} />
-      <Route path="/" element={<DashboardLayout />}>
+      <Route path="/app" element={<DashboardLayout />}>
         <Route index element={<Dashboard />} />
         <Route path="trends" element={<Trends />} />
         <Route path="briefs" element={<Briefs />} />
@@ -51,8 +53,9 @@ function App() {
         <Route path="profile" element={<Profile />} />
         <Route path="settings" element={<Settings />} />
         <Route path="appearance" element={<Appearance />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/app" replace />} />
       </Route>
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

@@ -5,7 +5,7 @@ import { useBriefs } from '../hooks/useBriefs';
 
 export default function Trends() {
   const navigate = useNavigate();
-  const { data: trendData, isLoading, refresh } = useTrends();
+  const { data: trendData, isLoading, refresh, syncInterval, updateSyncInterval } = useTrends();
   const { generate, autoGenerate } = useBriefs();
   
   const [generatingId, setGeneratingId] = useState<string | null>(null);
@@ -16,8 +16,9 @@ export default function Trends() {
 
   const steps = [
     "Searching trend sources...",
-    "Analyzing Google Trends...",
+    "Analyzing Hacker News...",
     "Reviewing Reddit discussions...",
+    "Scanning Dev.to trends...",
     "Ranking opportunities...",
     "Generating recommendations..."
   ];
@@ -46,6 +47,22 @@ export default function Trends() {
         <div>
           <h1 style={{ fontFamily: 'var(--display)', fontSize: '36px', margin: '0 0 8px', color: 'var(--ink)' }}>Trends & Sync</h1>
           <p style={{ color: 'var(--body)', fontSize: '16px' }}>Trendy: Discovering and scoring high-opportunity topics.</p>
+          
+          <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: 'var(--muted)' }}>
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            Background Sync:
+            <select 
+              value={syncInterval} 
+              onChange={(e) => updateSyncInterval(Number(e.target.value))}
+              style={{ background: 'transparent', border: '1px solid var(--hairline)', borderRadius: '4px', padding: '2px 8px', color: 'var(--ink)', fontSize: '13px', cursor: 'pointer' }}
+            >
+              <option value={0}>Disabled</option>
+              <option value={15}>Every 15m</option>
+              <option value={30}>Every 30m</option>
+              <option value={60}>Every 1h</option>
+              <option value={120}>Every 2h</option>
+            </select>
+          </div>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
           <button 
@@ -125,13 +142,12 @@ export default function Trends() {
           </div>
         ) : (
           trendData.map((trend, i) => (
-            <div key={trend.id} className="trend-card-enter" style={{ display: 'flex', flexDirection: 'column', padding: '24px', background: 'var(--surface-card)', border: '1px solid var(--hairline)', borderRadius: '8px', animationDelay: `${i * 0.05}s`, opacity: 0 }}>
+            <div key={trend.id} className="trend-card-enter" style={{ display: 'flex', flexDirection: 'column', padding: '24px', background: 'var(--surface-card)', border: '1px solid var(--hairline)', borderRadius: '8px', animationDelay: `${i * 0.05}s` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
                 <div>
                   <h3 style={{ margin: '0 0 8px', fontSize: '18px', color: 'var(--ink)' }}>{trend.title}</h3>
                   <div style={{ display: 'flex', gap: '12px', fontSize: '13px', fontFamily: 'var(--mono)', color: 'var(--muted)' }}>
                     <span>Source: {trend.source}</span>
-                    <span>Status: {trend.status}</span>
                   </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>

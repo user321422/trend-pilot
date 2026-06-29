@@ -1,17 +1,18 @@
-import { useState, FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import type { FormEvent } from 'react';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
-  const [email, setEmail] = useState('admin@trendy.dev');
-  const [password, setPassword] = useState('adminpass123');
+  const [email, setEmail] = useState('admin@trendpilot.com');
+  const [password, setPassword] = useState('password123');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const { login, user } = useAuth();
   const navigate = useNavigate();
 
   if (user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/app" replace />;
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -21,7 +22,7 @@ export default function Login() {
 
     try {
       await login({ email, password });
-      navigate('/');
+      navigate('/app');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
@@ -73,7 +74,7 @@ export default function Login() {
         <div className="login-footer">
           <p>Demo accounts available:</p>
           <ul>
-            <li><strong>admin@trendy.dev</strong> / adminpass123</li>
+            <li><strong>admin@trendpilot.com</strong> / password123</li>
           </ul>
         </div>
       </div>

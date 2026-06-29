@@ -33,29 +33,29 @@ export default function DashboardLayout() {
   return (
     <main className="dashboard-shell">
       <aside className="sidebar" aria-label="Trendy navigation">
-        <div className="brand">
+        <div className="brand" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
           <span className="brand-mark" aria-hidden="true" />
           <span>Trendy</span>
         </div>
         <nav className="nav-list">
-          <NavLink to="/" end className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+          <NavLink to="/app" end className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
             Chat Assistant
           </NavLink>
           <div style={{ height: '24px' }}></div>
           <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--muted)', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '8px', paddingLeft: '12px' }}>Pipeline</div>
-          <NavLink to="/trends" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+          <NavLink to="/app/trends" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
             Trends & Sync
           </NavLink>
-          <NavLink to="/briefs" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+          <NavLink to="/app/briefs" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
             Content Briefs
           </NavLink>
-          <NavLink to="/assignments" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+          <NavLink to="/app/assignments" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
             Writers
           </NavLink>
-          <NavLink to="/drafts" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+          <NavLink to="/app/drafts" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
             Draft Reviews
           </NavLink>
-          <NavLink to="/publishing" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+          <NavLink to="/app/publishing" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
             Publishing
           </NavLink>
         </nav>
@@ -83,19 +83,19 @@ export default function DashboardLayout() {
               <div className="popover-divider" />
               <button 
                 className="popover-item" 
-                onClick={() => { setIsProfileMenuOpen(false); navigate('/profile'); }}
+                onClick={() => { setIsProfileMenuOpen(false); navigate('/app/profile'); }}
               >
                 Profile
               </button>
               <button 
                 className="popover-item" 
-                onClick={() => { setIsProfileMenuOpen(false); navigate('/settings'); }}
+                onClick={() => { setIsProfileMenuOpen(false); navigate('/app/settings'); }}
               >
                 Settings
               </button>
               <button 
                 className="popover-item" 
-                onClick={() => { setIsProfileMenuOpen(false); navigate('/appearance'); }}
+                onClick={() => { setIsProfileMenuOpen(false); navigate('/app/appearance'); }}
               >
                 Appearance
               </button>
