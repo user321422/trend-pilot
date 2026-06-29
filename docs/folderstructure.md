@@ -149,3 +149,5 @@ trendy-ai/
     ├── DATABASE.md
     ├── DEMO_FLOW.md
     └── ARCHITECTURE.md
+    |__ FOLDERSTRUCTURE.md
+    

@@ -1,13 +1,69 @@
-import { useState, useRef, useEffect, KeyboardEvent } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import type { KeyboardEvent } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { useTrends } from '../hooks/useTrends';
-import { briefs as briefsApi, chat as chatApi } from '../services/api';
+import { briefs as briefsApi, chat as chatApi, orchestrator } from '../services/api';
+import type { OrchestratorStatus } from '../services/api';
 
 type Message = {
   id: string;
   role: 'user' | 'ai';
   content: string | React.ReactNode;
 };
+
+function ThinkingProgress() {
+  const [step, setStep] = useState(0);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const steps = [
+    "Analyzing user request...",
+    "Querying knowledge base...",
+    "Reviewing content operations parameters...",
+    "Structuring response...",
+    "Generating insights..."
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setStep(prev => Math.min(prev + 1, steps.length - 1));
+    }, 1200);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="reasoning-container" style={{ width: '100%', marginTop: 0, padding: 0, background: 'transparent', border: 'none' }}>
+      <div 
+        className="reasoning-header" 
+        onClick={() => setIsExpanded(!isExpanded)}
+        style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'var(--surface-card)', border: '1px solid var(--hairline)', borderRadius: '20px', width: 'fit-content' }}
+      >
+        <div className="reasoning-spinner" style={{ width: '14px', height: '14px', borderWidth: '1.5px' }}></div>
+        <span style={{ fontSize: '13px', color: 'var(--body)' }}>{isExpanded ? "Trendy is reasoning..." : steps[step]}</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '14px', height: '14px', transform: isExpanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', color: 'var(--muted)', marginLeft: '4px' }}><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </div>
+      
+      {isExpanded && (
+        <div className="collapsible-section" style={{ border: 'none', marginTop: '12px' }}>
+          <div className="collapsible-content" style={{ padding: '0', background: 'transparent', border: 'none', gap: '8px' }}>
+            {steps.map((s, idx) => (
+              idx <= step && (
+                <div key={idx} className={`reasoning-step ${idx === step ? 'active' : 'completed'}`} style={{ fontSize: '13px' }}>
+                  <div className="step-icon">
+                    {idx < step ? (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    ) : (
+                      <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--primary)', animation: 'pulse 1.5s infinite' }}></div>
+                    )}
+                  </div>
+                  <span>{s}</span>
+                </div>
+              )
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const { data: trendData, refresh } = useTrends();
@@ -20,7 +76,37 @@ export default function Dashboard() {
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [orchStatus, setOrchStatus] = useState<OrchestratorStatus | null>(null);
+  const [showLogs, setShowLogs] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    async function fetchStatus() {
+      try {
+        const res = await orchestrator.status();
+        setOrchStatus(res);
+        if (res.isRunning) {
+          setShowLogs(true);
+        }
+      } catch (err) {
+        console.error("Failed to fetch orchestrator status:", err);
+      }
+    }
+    fetchStatus();
+    const interval = setInterval(fetchStatus, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  async function handleTriggerOrchestrator() {
+    try {
+      setShowLogs(true);
+      await orchestrator.run();
+      const res = await orchestrator.status();
+      setOrchStatus(res);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to trigger orchestrator');
+    }
+  }
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -131,6 +217,165 @@ export default function Dashboard() {
     <>
       <div className="chat-container">
         <div className="chat-messages">
+          {/* Orchestrator Status Banner */}
+          <div style={{
+            background: 'var(--surface-card)',
+            border: '1px solid var(--hairline)',
+            borderRadius: '12px',
+            padding: '20px 24px',
+            boxShadow: '0 2px 8px rgba(20, 20, 19, 0.04)',
+            marginBottom: '20px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px'
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              width: '100%',
+              gap: '24px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={{
+                  width: '10px',
+                  height: '10px',
+                  borderRadius: '50%',
+                  background: orchStatus?.isRunning 
+                    ? 'var(--primary)' 
+                    : orchStatus?.lastError 
+                      ? '#d9383a' 
+                      : '#4a7c59',
+                  boxShadow: orchStatus?.isRunning 
+                    ? '0 0 8px var(--primary)' 
+                    : orchStatus?.lastError 
+                      ? '0 0 8px #d9383a' 
+                      : 'none',
+                }} />
+                <div>
+                  <div style={{ fontWeight: 600, color: 'var(--ink)', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    Autonomous Agent Engine
+                    <span style={{
+                      fontSize: '11px',
+                      fontWeight: 500,
+                      padding: '2px 6px',
+                      borderRadius: '4px',
+                      background: orchStatus?.isRunning 
+                        ? 'rgba(204,120,92,0.1)' 
+                        : orchStatus?.lastError 
+                          ? 'rgba(217,56,58,0.1)' 
+                          : 'rgba(74,124,89,0.1)',
+                      color: orchStatus?.isRunning 
+                        ? 'var(--primary)' 
+                        : orchStatus?.lastError 
+                          ? '#d9383a' 
+                          : '#4a7c59'
+                    }}>
+                      {orchStatus?.isRunning 
+                        ? 'ACTIVE RUN' 
+                        : orchStatus?.lastError 
+                          ? 'FAILED' 
+                          : 'STANDBY'}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '4px' }}>
+                    {orchStatus?.isRunning 
+                      ? `Processing: ${orchStatus.currentStep || 'Starting lifecycle...'}` 
+                      : orchStatus?.lastError
+                        ? `Error: ${orchStatus.lastError}`
+                        : orchStatus?.lastCompleted 
+                          ? `Last complete cycle: ${new Date(orchStatus.lastCompleted).toLocaleTimeString()}`
+                          : 'Standby. Orchestrator ready.'}
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                {orchStatus?.logs && orchStatus.logs.length > 0 && (
+                  <button
+                    onClick={() => setShowLogs(!showLogs)}
+                    style={{
+                      padding: '8px 12px',
+                      borderRadius: '6px',
+                      background: 'transparent',
+                      border: '1px solid var(--hairline)',
+                      color: 'var(--body)',
+                      fontSize: '13px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: showLogs ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', width: '12px', height: '12px' }}>
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                    {showLogs ? 'Hide Logs' : 'View Logs'}
+                  </button>
+                )}
+                <button
+                  onClick={handleTriggerOrchestrator}
+                  disabled={orchStatus?.isRunning}
+                  style={{
+                    padding: '10px 16px',
+                    borderRadius: '6px',
+                    background: orchStatus?.isRunning ? 'var(--hairline)' : 'var(--primary)',
+                    color: orchStatus?.isRunning ? 'var(--muted)' : 'var(--on-primary)',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    cursor: orchStatus?.isRunning ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    transition: 'all 0.2s',
+                    boxShadow: orchStatus?.isRunning ? 'none' : '0 2px 6px rgba(204,120,92,0.15)'
+                  }}
+                >
+                  {orchStatus?.isRunning ? (
+                    <>Processing...</>
+                  ) : (
+                    <>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                      </svg>
+                      Trigger Pipeline
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {showLogs && orchStatus?.logs && (
+              <div style={{
+                background: 'var(--bg)',
+                border: '1px solid var(--hairline)',
+                borderRadius: '8px',
+                padding: '12px 16px',
+                maxHeight: '200px',
+                overflowY: 'auto',
+                fontFamily: 'monospace',
+                fontSize: '12px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '6px',
+                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
+              }}>
+                {orchStatus.logs.map((log, idx) => (
+                  <div key={idx} style={{ 
+                    display: 'flex', 
+                    gap: '12px', 
+                    color: log.isError ? '#d9383a' : 'var(--body)',
+                    alignItems: 'flex-start'
+                  }}>
+                    <span style={{ color: 'var(--muted)', flexShrink: 0 }}>
+                      {new Date(log.timestamp).toLocaleTimeString()}
+                    </span>
+                    <span style={{ wordBreak: 'break-all' }}>{log.message}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           {messages.map(msg => (
             <div key={msg.id} className={`message ${msg.role}`}>
               <div className="message-avatar">
@@ -144,8 +389,8 @@ export default function Dashboard() {
           {isTyping && (
             <div className="message ai">
               <div className="message-avatar">T</div>
-              <div className="message-content" style={{ color: 'var(--text-tertiary)' }}>
-                Thinking...
+              <div className="message-content" style={{ width: '100%', maxWidth: '100%', paddingTop: 0 }}>
+                <ThinkingProgress />
               </div>
             </div>
           )}
@@ -155,8 +400,8 @@ export default function Dashboard() {
       
       <div className="chat-input-wrapper">
         <div className="quick-actions" style={{ display: 'flex', gap: '8px', marginBottom: '12px', justifyContent: 'center' }}>
-          <button className="quick-action-chip" onClick={() => handleSend('Sync latest trends')} disabled={isTyping} style={{ padding: '6px 12px', borderRadius: '16px', border: '1px solid var(--border)', background: 'var(--surface-raised)', fontSize: '12px', cursor: 'pointer', color: 'var(--text-secondary)' }}>🔄 Sync Trends</button>
-          <button className="quick-action-chip" onClick={() => handleSend('Generate briefs for top trends')} disabled={isTyping} style={{ padding: '6px 12px', borderRadius: '16px', border: '1px solid var(--border)', background: 'var(--surface-raised)', fontSize: '12px', cursor: 'pointer', color: 'var(--text-secondary)' }}>📝 Generate Briefs</button>
+          <button className="quick-action-chip" onClick={() => handleSend('Sync latest trends')} disabled={isTyping} style={{ padding: '6px 12px', borderRadius: '16px', border: '1px solid var(--hairline)', background: 'var(--surface-card)', fontSize: '12px', cursor: 'pointer', color: 'var(--body)' }}>Sync Trends</button>
+          <button className="quick-action-chip" onClick={() => handleSend('Generate briefs for top trends')} disabled={isTyping} style={{ padding: '6px 12px', borderRadius: '16px', border: '1px solid var(--hairline)', background: 'var(--surface-card)', fontSize: '12px', cursor: 'pointer', color: 'var(--body)' }}>Generate Briefs</button>
         </div>
         <div className="chat-input-box">
           <input 

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { requireAuth, requireRole } from '../middleware/auth.js';
+import { requireAuth } from '../middleware/auth.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { schedulePublish, generateSocial, exportContent } from '../controllers/publishController.js';
 
@@ -32,29 +32,26 @@ function validate(schema) {
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 
-// POST /publish/schedule — Admin/Editor only
+// POST /publish/schedule
 router.post(
   '/schedule',
   requireAuth,
-  requireRole(['ADMIN', 'EDITOR']),
   validate(scheduleSchema),
   asyncHandler(schedulePublish)
 );
 
-// POST /publish/social — Admin/Editor only
+// POST /publish/social
 router.post(
   '/social',
   requireAuth,
-  requireRole(['ADMIN', 'EDITOR']),
   validate(socialSchema),
   asyncHandler(generateSocial)
 );
 
-// GET /publish/export?draftId=xxx — Admin/Editor only
+// GET /publish/export?draftId=xxx
 router.get(
   '/export',
   requireAuth,
-  requireRole(['ADMIN', 'EDITOR']),
   asyncHandler(exportContent)
 );
 

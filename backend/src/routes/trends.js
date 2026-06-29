@@ -35,9 +35,9 @@ router.get("/:id", asyncHandler(async (req, res) => {
   res.json(trend);
 }));
 
-// POST /trends/refresh — fetch fresh trends and store them
 router.post("/refresh", asyncHandler(async (req, res) => {
-  const trends = await fetchAndStoreTrends();
+  const userApiKey = req.headers['x-api-key'];
+  const trends = await fetchAndStoreTrends(userApiKey);
   res.json({ message: "Trends refreshed", count: trends.length });
 }));
 

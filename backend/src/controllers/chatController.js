@@ -4,6 +4,8 @@ const BLACKLIST_REGEX = /\b(write (a )?(script|program|code|poem|joke)|debug|com
 
 export async function handleChat(req, res) {
   const { messages } = req.body;
+  const userApiKey = req.headers['x-api-key'];
+  
   if (!messages || !Array.isArray(messages)) {
     return res.status(400).json({ error: "messages array is required" });
   }
@@ -17,7 +19,7 @@ export async function handleChat(req, res) {
   }
 
   try {
-    let reply = await callQwenChat(messages);
+    let reply = await callQwenChat(messages, userApiKey);
 
     // Aggressively strip out all emojis regardless of what the AI outputs
     reply = reply.replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '').trim();
