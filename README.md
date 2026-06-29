@@ -80,6 +80,8 @@ Editor can:
 * Reject Brief
 * Edit Brief
 
+Or 
+Auto Pass with AI
 ---
 
 ## Phase 4: Writer Assignment
