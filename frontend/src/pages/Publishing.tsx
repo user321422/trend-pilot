@@ -19,7 +19,7 @@ export default function Publishing() {
 
   const [targets, setTargets] = useState<DispatchTargets>({
     medium: { enabled: false, token: '', pubId: '' },
-    devto: { enabled: false, apiKey: '' },
+    devto: { enabled: false, apiKey: 'zv1mb2RR7jFFit8wrhUg84cd' },
     webhook: { enabled: false, url: '', secret: '' },
     wordpress: { enabled: false, url: '', username: '', password: '' },
     ghost: { enabled: false, url: '', apiKey: '' },
@@ -54,9 +54,13 @@ export default function Publishing() {
     const saved = localStorage.getItem('tp_publish_targets');
     if (saved) {
       try {
+        const parsed = JSON.parse(saved);
+        if (parsed.devto && !parsed.devto.apiKey) {
+          parsed.devto.apiKey = 'zv1mb2RR7jFFit8wrhUg84cd';
+        }
         setTargets(prev => ({
           ...prev,
-          ...JSON.parse(saved)
+          ...parsed
         }));
       } catch (e) {
         console.error(e);
