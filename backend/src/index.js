@@ -31,7 +31,13 @@ app.use('/publish', publishRoutes);
 app.use('/chat', chatRoutes);
 app.use('/orchestrator', orchestratorRoutes);
 
-// ── Health check ──────────────────────────────────────────────────────────────
+// ── Welcome & Health check ──────────────────────────────────────────────────
+app.get('/', (_req, res) => res.json({ 
+  name: 'Trendy API', 
+  version: '1.0.0', 
+  status: 'active',
+  health: '/health' 
+}));
 app.get('/health', (_req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 
 // ── Centralized error handler — MUST be last ──────────────────────────────────
