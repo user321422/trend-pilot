@@ -12,6 +12,7 @@ import chatRoutes from './routes/chat.js';
 import orchestratorRoutes from './routes/orchestrator.js';
 import { fetchAndStoreTrends } from './services/trendFetcher.js';
 import { startOrchestrator, runFullAutonomousCycle } from './services/autonomousOrchestrator.js';
+import { initializeScheduler } from './services/trendScheduler.js';
 
 const app = express();
 
@@ -50,6 +51,11 @@ app.listen(PORT, () => {
   // ── Background Autonomous Orchestrator ─────────────────────────────────────
   // Enabled autonomous background schedules for complete automation.
   startOrchestrator(60); // Start with default (60 mins)
+
+  // Initialize and start background trend sync scheduler from database config
+  initializeScheduler().catch((error) => {
+    console.error("[Scheduler] Failed to initialize trend scheduler on startup:", error);
+  });
   
   // Run once on startup after a small delay
   setTimeout(async () => {

@@ -102,3 +102,10 @@ model Review {
   aiNotes              String?
   createdAt            DateTime @default(now())
 }
+
+model SystemSetting {
+  key       String   @id
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

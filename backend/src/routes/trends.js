@@ -34,7 +34,7 @@ router.post("/config", asyncHandler(async (req, res) => {
   if (typeof intervalMinutes !== 'number' || intervalMinutes < 0) {
     return res.status(400).json({ error: "intervalMinutes must be a non-negative number" });
   }
-  startBackgroundSync(intervalMinutes);
+  await startBackgroundSync(intervalMinutes);
   res.json({ message: "Background sync interval updated", intervalMinutes });
 }));
 
