@@ -1,3 +1,4 @@
+import { startBackgroundSync, getSyncInterval } from "../services/trendScheduler.js";
 import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
 import { asyncHandler } from "../middleware/errorHandler.js";
@@ -19,6 +20,22 @@ router.get("/", asyncHandler(async (req, res) => {
   });
 
   res.json({ count: trends.length, trends });
+}));
+
+
+// GET /trends/config — get the current background sync interval
+router.get("/config", asyncHandler(async (req, res) => {
+  res.json({ intervalMinutes: getSyncInterval() });
+}));
+
+// POST /trends/config — set the background sync interval
+router.post("/config", asyncHandler(async (req, res) => {
+  const { intervalMinutes } = req.body;
+  if (typeof intervalMinutes !== 'number' || intervalMinutes < 0) {
+    return res.status(400).json({ error: "intervalMinutes must be a non-negative number" });
+  }
+  startBackgroundSync(intervalMinutes);
+  res.json({ message: "Background sync interval updated", intervalMinutes });
 }));
 
 // GET /trends/:id — single trend detail

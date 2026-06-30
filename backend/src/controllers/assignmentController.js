@@ -109,10 +109,97 @@ export async function listAssignments(req, res) {
         },
       },
       writer: { select: { id: true, name: true, email: true } },
-      draft: { select: { id: true, submittedAt: true } },
+      draft: {
+        include: {
+          review: true
+        }
+      },
     },
     orderBy: { assignedAt: "desc" },
   });
 
   return res.json({ count: assignments.length, assignments });
+}
+
+// ── POST /assignments/:id/write — manually trigger AI writer for an assignment ──
+export async function triggerAIWrite(req, res) {
+  const { id } = req.params;
+
+  const assignment = await prisma.assignment.findUnique({
+    where: { id },
+    include: { brief: true, draft: true }
+  });
+
+  if (!assignment) {
+    return res.status(404).json({ error: "Assignment not found" });
+  }
+
+  if (!assignment.draft) {
+    return res.status(400).json({ error: "No draft associated with this assignment" });
+  }
+
+  // Update status to IN_PROGRESS
+  await prisma.assignment.update({
+    where: { id },
+    data: { status: 'IN_PROGRESS' }
+  });
+
+  const prompt = `You are an expert content writer for TrendPilot. Write a full, engaging article based on the following brief.
+Title: ${assignment.brief.h1}
+Angle: ${assignment.brief.angle}
+Keywords: ${assignment.brief.seoKeywords.join(', ')}
+Structure: ${JSON.stringify(assignment.brief.headingStructure)}
+
+Write the full markdown content for this article. No conversational filler, just the article content starting with the H1.`;
+
+  try {
+    const { callQwenChat } = await import("../services/qwen.js");
+    const content = await callQwenChat([{ role: 'user', content: prompt }]);
+
+    await prisma.draft.update({
+      where: { id: assignment.draft.id },
+      data: {
+        content,
+        submittedAt: new Date()
+      }
+    });
+
+    const updated = await prisma.assignment.update({
+      where: { id },
+      data: { status: 'SUBMITTED' },
+      include: {
+        brief: {
+          select: {
+            id: true,
+            status: true,
+            h1: true,
+            angle: true,
+            summary: true,
+            trend: {
+              select: {
+                id: true,
+                title: true,
+              },
+            },
+          },
+        },
+        writer: { select: { id: true, name: true, email: true } },
+        draft: {
+          include: {
+            review: true
+          }
+        },
+      }
+    });
+
+    return res.json({ assignment: updated });
+  } catch (e) {
+    // Reset status on error
+    await prisma.assignment.update({
+      where: { id },
+      data: { status: 'ASSIGNED' }
+    });
+    console.error("[Manual AI Write] Failed:", e);
+    return res.status(500).json({ error: `Failed to write draft: ${e.message}` });
+  }
 }

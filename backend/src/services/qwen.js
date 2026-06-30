@@ -1,7 +1,7 @@
 import { withTimeout, withRetry } from '../middleware/errorHandler.js';
 
 const QWEN_API_URL = process.env.QWEN_API_URL || 'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation';
-const TIMEOUT_MS = 15000; // 15s per attempt
+const TIMEOUT_MS = 60000; // 60s per attempt to allow for long brief generation
 const MAX_RETRIES = 3;
 
 /**

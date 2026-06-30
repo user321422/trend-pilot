@@ -1,4 +1,8 @@
-# Trendy 
+# Trendy AI
+
+Trendy AI is a fully autonomous content operations platform that automates the lifecycle of digital publishing. The platform manages the entire process: from real-time trend discovery and automated SEO brief generation to AI-assisted writing, draft review, and multi-platform publishing.
+
+---
 
 ---
 
@@ -92,352 +96,143 @@ System recommends best writer using:
 * Availability
 * Historical Performance
 
----
+### Backend & Database
+- **Runtime**: Node.js (v18+)
+- **Server Framework**: Express
+- **ORM**: Prisma ORM
+- **Database**: PostgreSQL (Supabase)
+- **Validations**: Zod
 
-## Phase 5: Draft Review
-
-AI checks:
-
-* SEO Compliance
-* Readability
-* Missing Sections
-* Keyword Coverage
-* Brief Compliance
-
----
-
-## Phase 6: Publish Preparation
-
-System generates:
-
-* Publish Schedule
-* LinkedIn Post
-* Twitter/X Post
-* Content Export
+### Integrations & AI
+- **LLM Engine**: Qwen API (for brief generation, copywriting agents, and structural SEO reviews)
+- **Publishing Targets**: Dev.to API / Webhooks
+- **Social Media**: Twitter API (via `twitter-api-v2`)
 
 ---
 
-# MVP Scope
+## Folder Structure
 
-For Hackathon Version:
-
-✅ Trend Detection
-
-✅ AI Brief Generation
-
-✅ Brief Approval
-
-✅ Writer Assignment
-
-✅ Draft Review
-
-✅ Publish Simulation
-
-❌ Real CMS Integration
-
-❌ Advanced Analytics
-
-❌ Multi-Tenant Support
-
-❌ Full Slack Integration
-
----
-
-# Technology Stack
-
-## Frontend
-
-* React
-* TypeScript
-* Vite
-* Tailwind CSS
-* shadcn/ui
-* React Router
-
-## Backend
-
-* Node.js
-* Express.js
-
-## Database
-
-* PostgreSQL
-* Prisma ORM
-
-## AI
-
-* Qwen API
-
-## Authentication
-
-* JWT
-
-## Deployment
-
-* Vercel (Frontend)
-* Render / Railway (Backend)
+```text
+├── backend/                  # Express API & Orchestration Engine
+│   ├── prisma/               # Database schema definition and migrations
+│   │   ├── schema.prisma     # Prisma database models
+│   │   └── migrations/       # SQL migration history
+│   ├── src/                  # Backend application source code
+│   │   ├── controllers/      # Express controllers handling business logic
+│   │   ├── middleware/       # Express middlewares (auth, errorHandler)
+│   │   ├── routes/           # Express routes mapping HTTP endpoints to controllers
+│   │   ├── services/         # Orchestrator, AI services (Qwen), publishers, and scorers
+│   │   └── index.js          # App entrypoint & initialization
+│   ├── seed.js               # Database seeder script with mock data
+│   └── package.json          # Node dependencies and scripts
+└── frontend/                 # React client SPA
+    ├── public/               # Static assets served directly
+    ├── src/                  # Frontend source code
+    │   ├── assets/           # Images, logo, and graphic files
+    │   ├── components/       # Reusable components (e.g. Chat, Terminal logs, panels)
+    │   ├── context/          # React Context providers for state management
+    │   ├── hooks/            # Custom React hooks
+    │   ├── layouts/          # Dashboard layouts & sidebars
+    │   ├── pages/            # Individual route pages (Dashboard, Trends, Briefs, Drafts, Settings, etc.)
+    │   ├── routes/           # Routing configuration and components
+    │   ├── services/         # API request clients and Axios instances
+    │   ├── styles/           # Global styles and styling assets
+    │   ├── types/            # TypeScript type declarations
+    │   ├── utils/            # Helper functions and utilities
+    │   ├── App.tsx           # Root App component
+    │   ├── index.css         # CSS entrypoint with custom styling
+    │   └── main.tsx          # Client entrypoint
+    ├── tsconfig.json         # TypeScript configurations
+    ├── vite.config.ts        # Vite configuration
+    └── package.json          # Package manifest and npm scripts
+```
 
 ---
 
-# Team Division
+## How to Set Up and Run
 
-## Member 1 
+Follow these instructions to run Trend Pilot AI locally.
 
-### Backend & AI Lead
+### Prerequisites
+- **Node.js** (v18 or higher)
+- **npm** (v9 or higher)
+- **PostgreSQL** database instance (or Supabase URL)
 
-Responsibilities:
+### 1. Database & Backend Setup
 
-### Authentication
+Navigate to the `backend` directory, install dependencies, and configure your environment:
 
-* Login
-* Registration
-* JWT Middleware
-* Role Management
+```bash
+cd backend
+npm install
+```
 
-### Database Design
+Create a `.env` file in the `backend` directory based on the following template:
 
-* Prisma Models
-* Database Relations
-* Migrations
+```env
+# Database Connections
+DATABASE_URL="postgresql://<user>:<password>@<host>:5432/postgres"
+DIRECT_URL="postgresql://<user>:<password>@<host>:5432/postgres"
 
-### Trend Engine
+# Authentication
+JWT_SECRET="your-jwt-secret-key"
 
-* Google Trends Integration
-* Reddit Integration
-* Trend Scoring Logic
+# AI Integrations (Qwen API)
+QWEN_API_KEY="your-qwen-api-key"
+QWEN_API_URL="your-qwen-api-endpoint"
 
-### AI Features
+# Publishing APIs
+DEVTO_API_KEY="your-devto-api-key"
+```
 
-* Qwen API Integration
-* Brief Generation
-* Writer Recommendation
-* Draft Review System
+Sync the database models and seed mock data:
 
-### Backend APIs
+```bash
+# Push schema to database
+npx prisma db push
 
-#### Auth
+# Seed mock database values (admin accounts, trends, briefs, drafts)
+npm run db:seed
+```
 
-* POST /auth/login
-* POST /auth/register
+Start the backend development server:
 
-#### Trends
-
-* GET /trends
-* GET /trends/
-
-#### Briefs
-
-* POST /briefs/generate
-* PATCH /briefs/approve
-
-#### Assignments
-
-* POST /assignments
-
-#### Reviews
-
-* POST /reviews/analyze
+```bash
+npm run dev
+```
+*The backend server will run on `http://localhost:3000`.*
 
 ---
 
-## Member 2 
+### 2. Frontend Setup
 
-### Frontend & UI Lead
+Navigate to the `frontend` directory, install dependencies, and configure the environment:
 
-Responsibilities:
+```bash
+cd ../frontend
+npm install
+```
 
-### UI System
+Create a `.env` file in the `frontend` directory with the backend server API url:
 
-* Tailwind Setup
-* Component Library
-* Responsive Design
+```env
+VITE_API_URL="http://localhost:3000"
+```
 
-### Pages
+Start the frontend development server:
 
-#### Authentication
-
-* Login Page
-
-#### Dashboard
-
-* Metrics Cards
-* Recent Activity
-* Trend Overview
-
-#### Trends
-
-* Trend List
-* Trend Detail
-
-#### Briefs
-
-* Brief Viewer
-* Approval Interface
-
-#### Assignments
-
-* Assignment Dashboard
-* Writer Workspace
-
-#### Reviews
-
-* Review Results
-* SEO Score Display
-
-### Frontend Integration
-
-* API Integration
-* State Management
-* Loading States
-* Error Handling
+```bash
+npm run dev
+```
+*The frontend application will start on `http://localhost:5173`.*
 
 ---
 
-# Shared Responsibilities
+### Default Credentials
 
-## Testing
+After launching the frontend server, open `http://localhost:5173` in your browser. Log in with the pre-seeded administrator account:
 
-Both Members:
-
-* API Testing
-* UI Testing
-* End-to-End Flow Testing
-
-## Deployment
-
-Both Members:
-
-* Environment Variables
-* Production Deployment
-* Demo Environment
-
-## Presentation
-
-Both Members:
-
-* Demo Preparation
-* Architecture Diagram
-* Pitch Deck
-* Judge Q&A
-
----
-
-# Development Timeline
-
-## Day 1
-
-Backend:
-
-* Project Setup
-* Database Design
-* Authentication
-
-Frontend:
-
-* React Setup
-* Layout System
-* Login UI
-
----
-
-## Day 2
-
-Backend:
-
-* Trend APIs
-* Trend Scoring
-
-Frontend:
-
-* Dashboard
-* Trends Page
-
----
-
-## Day 3
-
-Backend:
-
-* Qwen Integration
-* Brief Generation
-
-Frontend:
-
-* Brief Pages
-
----
-
-## Day 4
-
-Backend:
-
-* Assignment Logic
-* Review Engine
-
-Frontend:
-
-* Assignment UI
-* Review UI
-
----
-
-## Day 5
-
-Backend:
-
-* Final APIs
-* Bug Fixes
-
-Frontend:
-
-* Final Polish
-* Responsive Design
-
----
-
-## Day 6
-
-* Integration Testing
-* Deployment
-* Demo Preparation
-
----
-
-# Demo Flow
-
-1. Open Dashboard
-2. View Trending Topics
-3. Generate AI Brief
-4. Approve Brief
-5. Assign Writer
-6. Submit Draft
-7. Run AI Review
-8. Approve Publishing
-9. Generate Social Posts
-
-Total Demo Time: 3-4 Minutes
-
----
-
-# Success Criteria
-
-* End-to-end workflow operational
-* AI-generated briefs working
-* Writer assignment functioning
-* Draft review functioning
-* Clean UI
-* Stable demo
-* Deployment completed
-
----
-
-# Future Scope
-
-* Slack Integration
-* WordPress Publishing
-* Multi-Tenant Architecture
-* Analytics Dashboard
-* Performance Feedback Loop
-* Content Calendar
-* Automated Social Publishing
-* Enterprise Team Management
+| Field | Value |
+| :--- | :--- |
+| **Email** | `admin@trendpilot.com` |
+| **Password** | `password123` |

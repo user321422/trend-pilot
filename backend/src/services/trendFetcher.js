@@ -1,7 +1,5 @@
 import { PrismaClient } from "@prisma/client";
 import { callQwenJSON } from "./qwen.js";
-import googleTrends from "google-trends-api";
-
 const prisma = new PrismaClient();
 
 async function analyzeTrendWithAgent1(trendTitle, source, userApiKey) {
@@ -57,44 +55,51 @@ async function fetchRedditTrends() {
   return trends;
 }
 
-async function fetchGoogleTrends() {
-  const keywords = ["AI Agents", "SaaS", "OpenAI", "Next.js", "Web Development", "Vibe Coding"];
+async function fetchHackerNewsTrends() {
   const trends = [];
-  
-  for (const kw of keywords) {
-    try {
-      // Add a small delay to prevent Google from rate limiting / blocking us
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const res = await googleTrends.interestOverTime({ keyword: kw, startTime: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) });
-      
-      // If Google blocked the request, it returns an HTML page instead of JSON.
-      if (res.trim().startsWith('<')) {
-        throw new Error("Google Trends rate limit hit (returned HTML).");
-      }
-      
-      const data = JSON.parse(res);
-      const timelineData = data.default.timelineData;
-      if (timelineData && timelineData.length > 0) {
-        const latestVolume = timelineData[timelineData.length - 1].value[0];
+  try {
+    const res = await fetch("https://hacker-news.firebaseio.com/v0/topstories.json");
+    if (!res.ok) throw new Error("Failed to fetch HN top stories");
+    const storyIds = await res.json();
+    const topIds = storyIds.slice(0, 5); // get top 5
+    
+    for (const id of topIds) {
+      const storyRes = await fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`);
+      if (!storyRes.ok) continue;
+      const story = await storyRes.json();
+      if (story && story.title) {
         trends.push({
-          title: kw,
-          source: "google_trends",
-          volume: latestVolume || 10,
+          title: story.title,
+          source: "hacker_news",
+          volume: story.score || 10,
+          url: story.url || `https://news.ycombinator.com/item?id=${id}`
         });
-      } else {
-        throw new Error("No timeline data found.");
       }
-    } catch (error) {
-      console.error(`Google API blocked "${kw}", using fallback data.`);
-      // Fallback: If Google blocks the request, we provide realistic mock data
-      // so the demo continues to work seamlessly without an empty UI.
+    }
+  } catch (error) {
+    console.error("Hacker News API failed:", error.message);
+  }
+  return trends;
+}
+
+async function fetchDevToTrends() {
+  const trends = [];
+  try {
+    // top=1 fetches articles trending today
+    const res = await fetch("https://dev.to/api/articles?top=1&per_page=5");
+    if (!res.ok) throw new Error("Failed to fetch Dev.to articles");
+    const articles = await res.json();
+    
+    for (const article of articles) {
       trends.push({
-        title: kw,
-        source: "google_trends (fallback)",
-        volume: Math.floor(Math.random() * 50) + 40, // Random volume between 40-90
+        title: article.title,
+        source: "dev.to",
+        volume: article.public_reactions_count || 10,
+        url: article.url
       });
     }
+  } catch (error) {
+    console.error("Dev.to API failed:", error.message);
   }
   return trends;
 }
@@ -102,12 +107,13 @@ async function fetchGoogleTrends() {
 export async function fetchAndStoreTrends(userApiKey) {
   console.log("Fetching live trends...");
 
-  const [redditTrends, googleTrendsData] = await Promise.all([
+  const [redditTrends, hnTrendsData, devToTrendsData] = await Promise.all([
     fetchRedditTrends(),
-    fetchGoogleTrends()
+    fetchHackerNewsTrends(),
+    fetchDevToTrends()
   ]);
 
-  let rawTrends = [...redditTrends, ...googleTrendsData];
+  let rawTrends = [...redditTrends, ...hnTrendsData, ...devToTrendsData];
 
   if (rawTrends.length === 0) {
     console.log("No live trends found, returning empty.");
@@ -116,39 +122,39 @@ export async function fetchAndStoreTrends(userApiKey) {
 
   // To prevent the request from timing out while waiting for the AI to analyze all topics,
   // limit the number of trends to process in this run to 10.
-  rawTrends = rawTrends.slice(0, 10);
+  // We'll shuffle them to ensure a mix of sources when limiting
+  rawTrends = rawTrends.sort(() => 0.5 - Math.random()).slice(0, 10);
 
   // Calculate global max volume for normalization
   const sourceMax = Math.max(...rawTrends.map((t) => t.volume));
   
-  const stored = [];
+  const stored = await Promise.all(
+    rawTrends.map(async (raw) => {
+      const trendScore = Math.min((raw.volume / (sourceMax || 1)) * 100, 100);
 
-  for (const raw of rawTrends) {
-    const trendScore = Math.min((raw.volume / (sourceMax || 1)) * 100, 100);
+      const aiAnalysis = await analyzeTrendWithAgent1(raw.title, raw.source, userApiKey);
 
-    const aiAnalysis = await analyzeTrendWithAgent1(raw.title, raw.source, userApiKey);
-
-    const trend = await prisma.trend.upsert({
-      where: { id: (await prisma.trend.findFirst({ where: { title: raw.title } }))?.id ?? "none" },
-      update: {
-        trendScore,
-        relevanceScore: aiAnalysis.relevanceScore,
-        opportunityScore: aiAnalysis.opportunityScore,
-        aiExplanation: aiAnalysis.aiExplanation
-      },
-      create: {
-        title: raw.title,
-        source: raw.source,
-        rawData: raw,
-        trendScore,
-        relevanceScore: aiAnalysis.relevanceScore,
-        opportunityScore: aiAnalysis.opportunityScore,
-        aiExplanation: aiAnalysis.aiExplanation,
-      },
-    });
-
-    stored.push(trend);
-  }
+      return prisma.trend.upsert({
+        where: { id: (await prisma.trend.findFirst({ where: { title: raw.title } }))?.id ?? "none" },
+        update: {
+          trendScore,
+          relevanceScore: aiAnalysis.relevanceScore,
+          opportunityScore: aiAnalysis.opportunityScore,
+          aiExplanation: aiAnalysis.aiExplanation,
+          source: raw.source
+        },
+        create: {
+          title: raw.title,
+          source: raw.source,
+          rawData: raw,
+          trendScore,
+          relevanceScore: aiAnalysis.relevanceScore,
+          opportunityScore: aiAnalysis.opportunityScore,
+          aiExplanation: aiAnalysis.aiExplanation,
+        },
+      });
+    })
+  );
 
   console.log(`Stored ${stored.length} live trends.`);
   return stored;
