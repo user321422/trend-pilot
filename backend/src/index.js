@@ -9,6 +9,9 @@ import assignmentRoutes from './routes/assignments.js';
 import reviewRoutes from './routes/reviews.js';
 import publishRoutes from './routes/publish.js';
 import chatRoutes from './routes/chat.js';
+import orchestratorRoutes from './routes/orchestrator.js';
+import { fetchAndStoreTrends } from './services/trendFetcher.js';
+import { startOrchestrator, runFullAutonomousCycle } from './services/autonomousOrchestrator.js';
 
 const app = express();
 
@@ -26,6 +29,7 @@ app.use('/assignments', assignmentRoutes);
 app.use('/reviews', reviewRoutes);
 app.use('/publish', publishRoutes);
 app.use('/chat', chatRoutes);
+app.use('/orchestrator', orchestratorRoutes);
 
 // ── Health check ──────────────────────────────────────────────────────────────
 app.get('/health', (_req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
@@ -34,4 +38,20 @@ app.get('/health', (_req, res) => res.json({ status: 'ok', timestamp: new Date()
 app.use(errorHandler);
 
 const PORT = process.env.PORT ?? 3000;
-app.listen(PORT, () => console.log(`Trendy backend running at http://localhost:${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Trendy backend running at http://localhost:${PORT}`);
+  
+  // ── Background Autonomous Orchestrator ─────────────────────────────────────
+  // Enabled autonomous background schedules for complete automation.
+  startOrchestrator(60); // Start with default (60 mins)
+  
+  // Run once on startup after a small delay
+  setTimeout(async () => {
+    try {
+      console.log("[Orchestrator] Running initial autonomous cycle on startup...");
+      await runFullAutonomousCycle();
+    } catch (error) {
+      console.error("[Orchestrator] Initial cycle failed:", error);
+    }
+  }, 5000);
+});

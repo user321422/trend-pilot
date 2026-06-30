@@ -105,6 +105,29 @@ Draft (first 500 chars): ${draft.content.slice(0, 500)}`;
     data: { submittedAt: new Date() },
   });
 
+  // Update assignment status to COMPLETED and update writer load/stats
+  const assignment = await prisma.assignment.findUnique({
+    where: { id: draft.assignmentId }
+  });
+
+  if (assignment && assignment.status !== 'COMPLETED') {
+    await prisma.assignment.update({
+      where: { id: draft.assignmentId },
+      data: { status: 'COMPLETED' }
+    });
+
+    const currentWriter = await prisma.user.findUnique({ where: { id: assignment.writerId } });
+    const newLoad = currentWriter ? Math.max(0, currentWriter.currentLoad - 1) : 0;
+    
+    await prisma.user.update({
+      where: { id: assignment.writerId },
+      data: {
+        currentLoad: newLoad,
+        completedCount: { increment: 1 }
+      }
+    });
+  }
+
   return res.json({ review });
 }
 

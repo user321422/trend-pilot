@@ -1,441 +1,155 @@
-# Trendy 
+# Trend Pilot AI
+
+Trend Pilot AI is a fully autonomous content operations platform that automates the lifecycle of digital publishing. The platform manages the entire process: from real-time trend discovery and automated SEO brief generation to AI-assisted writing, draft review, and multi-platform publishing.
 
 ---
 
-# Project Overview
+## Technology Stack
 
-Trendy AI is an AI-powered content operations platform that automatically transforms trending internet topics into publish-ready content workflows.
+### Frontend
+- **Framework**: React (v19)
+- **Bundler & Build Tool**: Vite (v8)
+- **Language**: TypeScript
+- **Routing**: React Router DOM (v7)
+- **Styling**: Tailwind CSS & Glassmorphism-based Custom CSS
 
-The system continuously monitors trend sources, evaluates relevance using AI, generates content briefs, assigns writers, reviews submitted drafts, and prepares content for publishing.
+### Backend & Database
+- **Runtime**: Node.js (v18+)
+- **Server Framework**: Express
+- **ORM**: Prisma ORM
+- **Database**: PostgreSQL (Supabase)
+- **Validations**: Zod
 
-The goal is to reduce the content creation cycle from days to hours while keeping humans involved in critical decisions.
-
----
-
-# Problem Statement
-
-Content teams often miss trending opportunities because:
-
-* Topic discovery is manual
-* Research takes too long
-* Brief creation is repetitive
-* Writer assignment is inefficient
-* SEO optimization is inconsistent
-* Publishing workflows are fragmented
-
-Trendy AI automates these processes while preserving editorial control.
+### Integrations & AI
+- **LLM Engine**: Qwen API (for brief generation, copywriting agents, and structural SEO reviews)
+- **Publishing Targets**: Dev.to API / Webhooks
+- **Social Media**: Twitter API (via `twitter-api-v2`)
 
 ---
 
-# Target Users
+## Folder Structure
 
-* Digital Marketing Agencies
-* SaaS Companies
-* News Organizations
-* Bloggers
-* Content Teams
-* Startup Marketing Departments
-
----
-
-# Core Workflow
-
-## Phase 1: Trend Detection
-
-System collects trending topics from:
-
-* Google Trends
-* Reddit
-* News Sources
-
-Output:
-
-* Topic Title
-* Trend Score
-* Relevance Score
-* Opportunity Score
-* AI Explanation
-
----
-
-## Phase 2: Brief Generation
-
-AI generates:
-
-* Topic Summary
-* Audience Analysis
-* Unique Content Angle
-* SEO Keywords
-* H1 Suggestions
-* H2/H3 Structure
-* Recommended Word Count
+```text
+├── backend/                  # Express API & Orchestration Engine
+│   ├── prisma/               # Database schema definition and migrations
+│   │   ├── schema.prisma     # Prisma database models
+│   │   └── migrations/       # SQL migration history
+│   ├── src/                  # Backend application source code
+│   │   ├── controllers/      # Express controllers handling business logic
+│   │   ├── middleware/       # Express middlewares (auth, errorHandler)
+│   │   ├── routes/           # Express routes mapping HTTP endpoints to controllers
+│   │   ├── services/         # Orchestrator, AI services (Qwen), publishers, and scorers
+│   │   └── index.js          # App entrypoint & initialization
+│   ├── seed.js               # Database seeder script with mock data
+│   └── package.json          # Node dependencies and scripts
+└── frontend/                 # React client SPA
+    ├── public/               # Static assets served directly
+    ├── src/                  # Frontend source code
+    │   ├── assets/           # Images, logo, and graphic files
+    │   ├── components/       # Reusable components (e.g. Chat, Terminal logs, panels)
+    │   ├── context/          # React Context providers for state management
+    │   ├── hooks/            # Custom React hooks
+    │   ├── layouts/          # Dashboard layouts & sidebars
+    │   ├── pages/            # Individual route pages (Dashboard, Trends, Briefs, Drafts, Settings, etc.)
+    │   ├── routes/           # Routing configuration and components
+    │   ├── services/         # API request clients and Axios instances
+    │   ├── styles/           # Global styles and styling assets
+    │   ├── types/            # TypeScript type declarations
+    │   ├── utils/            # Helper functions and utilities
+    │   ├── App.tsx           # Root App component
+    │   ├── index.css         # CSS entrypoint with custom styling
+    │   └── main.tsx          # Client entrypoint
+    ├── tsconfig.json         # TypeScript configurations
+    ├── vite.config.ts        # Vite configuration
+    └── package.json          # Package manifest and npm scripts
+```
 
 ---
 
-## Phase 3: Human Approval
+## How to Set Up and Run
 
-Editor can:
+Follow these instructions to run Trend Pilot AI locally.
 
-* Approve Brief
-* Reject Brief
-* Edit Brief
+### Prerequisites
+- **Node.js** (v18 or higher)
+- **npm** (v9 or higher)
+- **PostgreSQL** database instance (or Supabase URL)
 
----
+### 1. Database & Backend Setup
 
-## Phase 4: Writer Assignment
+Navigate to the `backend` directory, install dependencies, and configure your environment:
 
-System recommends best writer using:
+```bash
+cd backend
+npm install
+```
 
-* Expertise
-* Availability
-* Historical Performance
+Create a `.env` file in the `backend` directory based on the following template:
 
----
+```env
+# Database Connections
+DATABASE_URL="postgresql://<user>:<password>@<host>:5432/postgres"
+DIRECT_URL="postgresql://<user>:<password>@<host>:5432/postgres"
 
-## Phase 5: Draft Review
+# Authentication
+JWT_SECRET="your-jwt-secret-key"
 
-AI checks:
+# AI Integrations (Qwen API)
+QWEN_API_KEY="your-qwen-api-key"
+QWEN_API_URL="your-qwen-api-endpoint"
 
-* SEO Compliance
-* Readability
-* Missing Sections
-* Keyword Coverage
-* Brief Compliance
+# Publishing APIs
+DEVTO_API_KEY="your-devto-api-key"
+```
 
----
+Sync the database models and seed mock data:
 
-## Phase 6: Publish Preparation
+```bash
+# Push schema to database
+npx prisma db push
 
-System generates:
+# Seed mock database values (admin accounts, trends, briefs, drafts)
+npm run db:seed
+```
 
-* Publish Schedule
-* LinkedIn Post
-* Twitter/X Post
-* Content Export
+Start the backend development server:
 
----
-
-# MVP Scope
-
-For Hackathon Version:
-
-✅ Trend Detection
-
-✅ AI Brief Generation
-
-✅ Brief Approval
-
-✅ Writer Assignment
-
-✅ Draft Review
-
-✅ Publish Simulation
-
-❌ Real CMS Integration
-
-❌ Advanced Analytics
-
-❌ Multi-Tenant Support
-
-❌ Full Slack Integration
+```bash
+npm run dev
+```
+*The backend server will run on `http://localhost:3000`.*
 
 ---
 
-# Technology Stack
+### 2. Frontend Setup
 
-## Frontend
+Navigate to the `frontend` directory, install dependencies, and configure the environment:
 
-* React
-* TypeScript
-* Vite
-* Tailwind CSS
-* shadcn/ui
-* React Router
+```bash
+cd ../frontend
+npm install
+```
 
-## Backend
+Create a `.env` file in the `frontend` directory with the backend server API url:
 
-* Node.js
-* Express.js
+```env
+VITE_API_URL="http://localhost:3000"
+```
 
-## Database
+Start the frontend development server:
 
-* PostgreSQL
-* Prisma ORM
-
-## AI
-
-* Qwen API
-
-## Authentication
-
-* JWT
-
-## Deployment
-
-* Vercel (Frontend)
-* Render / Railway (Backend)
+```bash
+npm run dev
+```
+*The frontend application will start on `http://localhost:5173`.*
 
 ---
 
-# Team Division
+### Default Credentials
 
-## Member 1 
+After launching the frontend server, open `http://localhost:5173` in your browser. Log in with the pre-seeded administrator account:
 
-### Backend & AI Lead
-
-Responsibilities:
-
-### Authentication
-
-* Login
-* Registration
-* JWT Middleware
-* Role Management
-
-### Database Design
-
-* Prisma Models
-* Database Relations
-* Migrations
-
-### Trend Engine
-
-* Google Trends Integration
-* Reddit Integration
-* Trend Scoring Logic
-
-### AI Features
-
-* Qwen API Integration
-* Brief Generation
-* Writer Recommendation
-* Draft Review System
-
-### Backend APIs
-
-#### Auth
-
-* POST /auth/login
-* POST /auth/register
-
-#### Trends
-
-* GET /trends
-* GET /trends/
-
-#### Briefs
-
-* POST /briefs/generate
-* PATCH /briefs/approve
-
-#### Assignments
-
-* POST /assignments
-
-#### Reviews
-
-* POST /reviews/analyze
-
----
-
-## Member 2 
-
-### Frontend & UI Lead
-
-Responsibilities:
-
-### UI System
-
-* Tailwind Setup
-* Component Library
-* Responsive Design
-
-### Pages
-
-#### Authentication
-
-* Login Page
-
-#### Dashboard
-
-* Metrics Cards
-* Recent Activity
-* Trend Overview
-
-#### Trends
-
-* Trend List
-* Trend Detail
-
-#### Briefs
-
-* Brief Viewer
-* Approval Interface
-
-#### Assignments
-
-* Assignment Dashboard
-* Writer Workspace
-
-#### Reviews
-
-* Review Results
-* SEO Score Display
-
-### Frontend Integration
-
-* API Integration
-* State Management
-* Loading States
-* Error Handling
-
----
-
-# Shared Responsibilities
-
-## Testing
-
-Both Members:
-
-* API Testing
-* UI Testing
-* End-to-End Flow Testing
-
-## Deployment
-
-Both Members:
-
-* Environment Variables
-* Production Deployment
-* Demo Environment
-
-## Presentation
-
-Both Members:
-
-* Demo Preparation
-* Architecture Diagram
-* Pitch Deck
-* Judge Q&A
-
----
-
-# Development Timeline
-
-## Day 1
-
-Backend:
-
-* Project Setup
-* Database Design
-* Authentication
-
-Frontend:
-
-* React Setup
-* Layout System
-* Login UI
-
----
-
-## Day 2
-
-Backend:
-
-* Trend APIs
-* Trend Scoring
-
-Frontend:
-
-* Dashboard
-* Trends Page
-
----
-
-## Day 3
-
-Backend:
-
-* Qwen Integration
-* Brief Generation
-
-Frontend:
-
-* Brief Pages
-
----
-
-## Day 4
-
-Backend:
-
-* Assignment Logic
-* Review Engine
-
-Frontend:
-
-* Assignment UI
-* Review UI
-
----
-
-## Day 5
-
-Backend:
-
-* Final APIs
-* Bug Fixes
-
-Frontend:
-
-* Final Polish
-* Responsive Design
-
----
-
-## Day 6
-
-* Integration Testing
-* Deployment
-* Demo Preparation
-
----
-
-# Demo Flow
-
-1. Open Dashboard
-2. View Trending Topics
-3. Generate AI Brief
-4. Approve Brief
-5. Assign Writer
-6. Submit Draft
-7. Run AI Review
-8. Approve Publishing
-9. Generate Social Posts
-
-Total Demo Time: 3-4 Minutes
-
----
-
-# Success Criteria
-
-* End-to-end workflow operational
-* AI-generated briefs working
-* Writer assignment functioning
-* Draft review functioning
-* Clean UI
-* Stable demo
-* Deployment completed
-
----
-
-# Future Scope
-
-* Slack Integration
-* WordPress Publishing
-* Multi-Tenant Architecture
-* Analytics Dashboard
-* Performance Feedback Loop
-* Content Calendar
-* Automated Social Publishing
-* Enterprise Team Management
+| Field | Value |
+| :--- | :--- |
+| **Email** | `admin@trendpilot.com` |
+| **Password** | `password123` |
