@@ -72,17 +72,9 @@ export default function Drafts() {
   const selectedAssignment = assignments.find(a => a.id === selectedId);
 
   return (
-    <div style={{ display: 'flex', height: '100%', width: '100%', overflow: 'hidden' }}>
+    <div className="split-pane">
       {/* Sidebar List */}
-      <div style={{
-        width: '320px',
-        borderRight: '1px solid var(--hairline)',
-        background: 'var(--surface-soft)',
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        flexShrink: 0
-      }}>
+      <div className="split-pane-sidebar">
         <div style={{ padding: '24px 20px', borderBottom: '1px solid var(--hairline)' }}>
           <h2 style={{ fontSize: '20px', fontFamily: 'var(--display)', margin: '0 0 4px', color: 'var(--ink)' }}>Draft Reviews</h2>
           <p style={{ color: 'var(--muted)', fontSize: '13px', margin: 0 }}>Agent 4: Automated quality & SEO reviews.</p>
@@ -152,17 +144,11 @@ export default function Drafts() {
       </div>
 
       {/* Content View */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', background: 'var(--canvas)' }}>
+      <div className="split-pane-content">
         {selectedAssignment ? (
-          <div style={{ display: 'flex', flex: 1, overflow: 'hidden', width: '100%' }}>
+          <div className="drafts-inner-layout">
             {/* Left: Article Reader */}
-            <div style={{
-              flex: 3,
-              padding: '40px',
-              overflowY: 'auto',
-              borderRight: '1px solid var(--hairline)',
-              height: '100%'
-            }}>
+            <div className="drafts-reader-pane">
               <div style={{ maxWidth: '700px', margin: '0 auto' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
                   <span style={{
@@ -187,16 +173,7 @@ export default function Drafts() {
             </div>
 
             {/* Right: AI Review Panel */}
-            <div style={{
-              flex: 2,
-              background: 'var(--surface-soft)',
-              padding: '40px 30px',
-              overflowY: 'auto',
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '24px'
-            }}>
+            <div className="drafts-review-pane">
               <div>
                 <h3 style={{ fontSize: '18px', fontFamily: 'var(--display)', margin: '0 0 4px', color: 'var(--ink)' }}>Agent 4: AI Audit Report</h3>
                 <p style={{ color: 'var(--muted)', fontSize: '13px', margin: 0 }}>Automated SEO & compliance checks.</p>

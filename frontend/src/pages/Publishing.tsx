@@ -208,17 +208,9 @@ export default function Publishing() {
   };
 
   return (
-    <div style={{ display: 'flex', height: '100%', width: '100%', overflow: 'hidden' }}>
+    <div className="split-pane">
       {/* Sidebar: queue of completed assignments */}
-      <div style={{
-        width: '320px',
-        borderRight: '1px solid var(--hairline)',
-        background: 'var(--surface-soft)',
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        flexShrink: 0
-      }}>
+      <div className="split-pane-sidebar">
         <div style={{ padding: '24px 20px', borderBottom: '1px solid var(--hairline)' }}>
           <h2 style={{ fontSize: '20px', fontFamily: 'var(--display)', margin: '0 0 4px', color: 'var(--ink)' }}>
             Publishing & Distribution
@@ -304,14 +296,7 @@ export default function Publishing() {
       </div>
 
       {/* Main content pane */}
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        overflow: 'hidden',
-        background: 'var(--canvas)'
-      }}>
+      <div className="split-pane-content">
         {selectedAssignment ? (
           <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
             <div style={{
@@ -319,7 +304,7 @@ export default function Publishing() {
               borderBottom: '1px solid var(--hairline)',
               background: 'var(--surface-card)'
             }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
                 <div>
                   <h1 style={{
                     fontSize: '24px',
@@ -336,7 +321,7 @@ export default function Publishing() {
               </div>
 
               {/* Tabs */}
-              <div style={{ display: 'flex', gap: '24px', marginTop: '24px' }}>
+              <div style={{ display: 'flex', gap: '24px', marginTop: '24px', flexWrap: 'wrap' }}>
                 <button
                   onClick={() => setActiveTab('schedule')}
                   style={{
@@ -400,7 +385,7 @@ export default function Publishing() {
               </div>
             </div>
 
-            <div style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
+            <div className="split-pane-content-body">
               {/* Tab 1: Schedule */}
               {activeTab === 'schedule' && (
                 <div style={{ maxWidth: '650px', display: 'flex', flexDirection: 'column', gap: '24px' }}>

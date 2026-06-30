@@ -229,13 +229,7 @@ export default function Dashboard() {
             flexDirection: 'column',
             gap: '16px'
           }}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              width: '100%',
-              gap: '24px'
-            }}>
+            <div className="orch-banner-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                 <div style={{
                   width: '10px',

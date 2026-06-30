@@ -42,8 +42,8 @@ export default function Trends() {
 
   return (
     <div style={{ flex: 1, overflowY: 'auto', width: '100%' }}>
-      <div style={{ padding: '40px', maxWidth: '1000px', margin: '0 auto', width: '100%' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '40px' }}>
+      <div className="page-container">
+        <div className="page-header">
         <div>
           <h1 style={{ fontFamily: 'var(--display)', fontSize: '36px', margin: '0 0 8px', color: 'var(--ink)' }}>Trends & Sync</h1>
           <p style={{ color: 'var(--body)', fontSize: '16px' }}>Trendy: Discovering and scoring high-opportunity topics.</p>
@@ -64,7 +64,7 @@ export default function Trends() {
             </select>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div className="page-header-actions">
           <button 
             className="button outline" 
             onClick={async () => {
@@ -143,7 +143,7 @@ export default function Trends() {
         ) : (
           trendData.map((trend, i) => (
             <div key={trend.id} className="trend-card-enter" style={{ display: 'flex', flexDirection: 'column', padding: '24px', background: 'var(--surface-card)', border: '1px solid var(--hairline)', borderRadius: '8px', animationDelay: `${i * 0.05}s` }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%', gap: '16px', flexWrap: 'wrap' }}>
                 <div>
                   <h3 style={{ margin: '0 0 8px', fontSize: '18px', color: 'var(--ink)' }}>{trend.title}</h3>
                   <div style={{ display: 'flex', gap: '12px', fontSize: '13px', fontFamily: 'var(--mono)', color: 'var(--muted)' }}>

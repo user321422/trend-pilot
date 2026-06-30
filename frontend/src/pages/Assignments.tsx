@@ -38,7 +38,7 @@ function WriterCard({
       }}
     >
       {/* Header row */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ color: 'var(--muted)', fontSize: 12, fontWeight: 700 }}>
@@ -271,7 +271,7 @@ export default function Assignments() {
   }
 
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: '32px 24px' }}>
+    <div className="page-container" style={{ maxWidth: 800 }}>
       <h1 style={{ color: 'var(--ink)', marginBottom: 4 }}>Assignments</h1>
       <p style={{ color: 'var(--muted)', marginBottom: 32, fontSize: 15 }}>
         Select an approved brief and let AI find the best-matched writer.
@@ -294,7 +294,7 @@ export default function Assignments() {
         {loadingBriefs ? (
           <p style={{ color: 'var(--muted)' }}>Loading briefs…</p>
         ) : (
-          <div style={{ display: 'flex', gap: 12 }}>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <select
               value={selectedBriefId}
               onChange={(e) => {

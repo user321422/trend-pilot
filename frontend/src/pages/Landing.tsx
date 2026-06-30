@@ -67,7 +67,7 @@ export default function Landing() {
         borderBottom: '1px solid var(--hairline)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '22px', fontFamily: 'var(--display)', fontWeight: 600 }}>
-          <span className="brand-mark" style={{ width: '16px', height: '16px', background: 'var(--ink)' }} />
+          <img src="/favicon.png" alt="Trendy Logo" className="brand-logo-img" aria-hidden="true" />
           <span>Trendy</span>
         </div>
         

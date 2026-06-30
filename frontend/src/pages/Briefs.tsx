@@ -5,7 +5,7 @@ export default function Briefs() {
 
   return (
     <div style={{ flex: 1, overflowY: 'auto', width: '100%' }}>
-      <div style={{ padding: '40px', maxWidth: '1000px', margin: '0 auto', width: '100%' }}>
+      <div className="page-container">
         <div style={{ marginBottom: '40px' }}>
           <h1 style={{ fontFamily: 'var(--display)', fontSize: '36px', margin: '0 0 8px', color: 'var(--ink)' }}>Content Briefs</h1>
           <p style={{ color: 'var(--body)', fontSize: '16px' }}>Agent 2: AI-generated editorial outlines waiting for approval.</p>
@@ -23,7 +23,7 @@ export default function Briefs() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             {briefs.map((brief: any) => (
               <div key={brief.id} style={{ padding: '24px', background: 'var(--surface-card)', border: '1px solid var(--hairline)', borderRadius: '12px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
                       <h2 style={{ margin: 0, fontSize: '20px', color: 'var(--ink)' }}>{brief.trend?.title || 'Unknown Trend'}</h2>
@@ -58,7 +58,7 @@ export default function Briefs() {
                   )}
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
+                <div className="grid-2col" style={{ marginBottom: '24px' }}>
                   <div>
                     <h4 style={{ margin: '0 0 8px', fontSize: '14px', color: 'var(--ink)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Summary</h4>
                     <p style={{ margin: 0, color: 'var(--body)', fontSize: '14px', lineHeight: 1.6 }}>{brief.summary}</p>

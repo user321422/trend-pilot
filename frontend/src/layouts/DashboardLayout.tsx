@@ -34,7 +34,7 @@ export default function DashboardLayout() {
     <main className="dashboard-shell">
       <aside className="sidebar" aria-label="Trendy navigation">
         <div className="brand" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
-          <span className="brand-mark" aria-hidden="true" />
+          <img src="/favicon.png" alt="Trendy Logo" className="brand-logo-img" aria-hidden="true" />
           <span>Trendy</span>
         </div>
         <nav className="nav-list">

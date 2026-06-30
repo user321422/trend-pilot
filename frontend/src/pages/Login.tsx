@@ -34,7 +34,7 @@ export default function Login() {
     <div className="login-wrapper">
       <div className="login-card">
         <div className="login-brand">
-          <span className="brand-mark" aria-hidden="true" />
+          <img src="/favicon.png" alt="Trendy Logo" className="brand-logo-img" aria-hidden="true" />
           <span>Trendy</span>
         </div>
         
