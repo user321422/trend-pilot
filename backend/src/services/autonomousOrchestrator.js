@@ -3,6 +3,41 @@ import { fetchAndStoreTrends } from './trendFetcher.js';
 import { callQwenJSON, callQwenChat } from './qwen.js';
 import { recommendWriters as runRecommender } from './writerRecommender.js';
 import { executePublishDispatch } from '../controllers/publishController.js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const settingsPath = path.resolve(__dirname, '../../settings.json');
+
+export function readSettings() {
+  try {
+    if (fs.existsSync(settingsPath)) {
+      const data = fs.readFileSync(settingsPath, 'utf8');
+      return JSON.parse(data);
+    }
+  } catch (e) {
+    console.error("[Orchestrator] Error reading settings.json:", e);
+  }
+  return {
+    autoGenerateBriefs: true,
+    autoAssignBriefs: true,
+    autoWriteDrafts: true,
+    autoReviewDrafts: true,
+    autoPublish: false
+  };
+}
+
+export function writeSettings(settings) {
+  try {
+    fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), 'utf8');
+    return true;
+  } catch (e) {
+    console.error("[Orchestrator] Error writing settings.json:", e);
+    return false;
+  }
+}
 
 let orchestratorIntervalId = null;
 let isRunning = false;
@@ -261,30 +296,52 @@ export async function runFullAutonomousCycle() {
   
   addLog("Starting autonomous pipeline cycle...");
   try {
+    const settings = readSettings();
+
     currentStep = "Agent 1: Discovering & Scoring Trends";
     addLog("Reaching out to Google Trends, Reddit, and Twitter to fetch latest updates...");
     await fetchAndStoreTrends();
     addLog("Trends successfully fetched and opportunity scores computed.");
     
-    currentStep = "Agent 2: Generating Content Briefs";
-    addLog("Identifying trends with opportunity scores > 50 without existing briefs...");
-    await autoGenerateBriefs();
+    if (settings.autoGenerateBriefs) {
+      currentStep = "Agent 2: Generating Content Briefs";
+      addLog("Identifying trends with opportunity scores > 50 without existing briefs...");
+      await autoGenerateBriefs();
+    } else {
+      addLog("Auto-generation of content briefs skipped (disabled in settings).");
+    }
     
-    currentStep = "Agent 3: Assigning Writers";
-    addLog("Analyzing writer expertise and active workload metrics...");
-    await autoAssignBriefs();
+    if (settings.autoAssignBriefs) {
+      currentStep = "Agent 3: Assigning Writers";
+      addLog("Analyzing writer expertise and active workload metrics...");
+      await autoAssignBriefs();
+    } else {
+      addLog("Auto-assignment of writers skipped (disabled in settings).");
+    }
     
-    currentStep = "AI Writer: Composing Drafts";
-    addLog("Generating high-quality article draft content in Markdown...");
-    await autoWriteDrafts();
+    if (settings.autoWriteDrafts) {
+      currentStep = "AI Writer: Composing Drafts";
+      addLog("Generating high-quality article draft content in Markdown...");
+      await autoWriteDrafts();
+    } else {
+      addLog("Auto-writing of drafts skipped (disabled in settings).");
+    }
     
-    currentStep = "Agent 4: Reviewing Drafts";
-    addLog("Evaluating SEO compliance, readability, and angle alignment...");
-    await autoReviewDrafts();
+    if (settings.autoReviewDrafts) {
+      currentStep = "Agent 4: Reviewing Drafts";
+      addLog("Evaluating SEO compliance, readability, and angle alignment...");
+      await autoReviewDrafts();
+    } else {
+      addLog("Auto-reviewing of drafts skipped (disabled in settings).");
+    }
     
-    currentStep = "Agent 5: Publishing Content";
-    addLog("Locating completed assignments and auto-publishing to configured platforms...");
-    await autoPublishArticles();
+    if (settings.autoPublish) {
+      currentStep = "Agent 5: Publishing Content";
+      addLog("Locating completed assignments and auto-publishing to configured platforms...");
+      await autoPublishArticles();
+    } else {
+      addLog("Auto-publishing of articles skipped (disabled in settings).");
+    }
     
     currentStep = "Completed";
     lastCompleted = new Date().toISOString();

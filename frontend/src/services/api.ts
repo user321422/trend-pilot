@@ -303,7 +303,17 @@ export interface OrchestratorStatus {
   logs?: { timestamp: string; message: string; isError?: boolean }[];
 }
 
+export interface OrchestratorSettings {
+  autoGenerateBriefs: boolean;
+  autoAssignBriefs: boolean;
+  autoWriteDrafts: boolean;
+  autoReviewDrafts: boolean;
+  autoPublish: boolean;
+}
+
 export const orchestrator = {
   status: () => get<OrchestratorStatus>('/orchestrator/status'),
   run: () => post<{ message: string }>('/orchestrator/run', {}),
+  getSettings: () => get<OrchestratorSettings>('/orchestrator/settings'),
+  updateSettings: (s: Partial<OrchestratorSettings>) => post<{ message: string; settings: OrchestratorSettings }>('/orchestrator/settings', s),
 };
