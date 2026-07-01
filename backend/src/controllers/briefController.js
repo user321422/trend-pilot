@@ -35,6 +35,7 @@ Trend Context: ${trend.aiExplanation ?? "No additional context available."}`;
 
 export async function generateBrief(req, res) {
   const { trendId } = req.body;
+  const userApiKey = req.headers['x-api-key'];
 
   if (!trendId) {
     return res.status(400).json({ error: "trendId is required" });
@@ -48,7 +49,7 @@ export async function generateBrief(req, res) {
   const prompt = buildBriefPrompt(trend);
 
   try {
-    const briefData = await callQwenJSON(prompt);
+    const briefData = await callQwenJSON(prompt, userApiKey);
 
     const brief = await prisma.brief.create({
       data: {
@@ -110,6 +111,8 @@ export async function getBriefs(req, res) {
 }
 
 export async function autoGenerateBriefs(req, res) {
+  const userApiKey = req.headers['x-api-key'];
+
   // Find top 3 trends by opportunity score that do not have a brief yet
   const trends = await prisma.trend.findMany({
     where: { briefs: { none: {} } },
@@ -126,7 +129,7 @@ export async function autoGenerateBriefs(req, res) {
   for (const trend of trends) {
     try {
       const prompt = buildBriefPrompt(trend);
-      const briefData = await callQwenJSON(prompt);
+      const briefData = await callQwenJSON(prompt, userApiKey);
 
       const brief = await prisma.brief.create({
         data: {

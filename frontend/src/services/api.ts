@@ -16,9 +16,11 @@ async function request<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const token = getToken();
+  const localApiKey = localStorage.getItem('tp_openai_api_key');
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(localApiKey ? { 'x-api-key': localApiKey } : {}),
     ...(options.headers ?? {}),
   };
 

@@ -1,15 +1,100 @@
 import { withTimeout, withRetry } from '../middleware/errorHandler.js';
 
+// Base Qwen API URL.
+// Supported base URLs from Qwen / Alibaba Cloud Model Studio:
+// 1. Standard DashScope Endpoint: 
+//    https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation
+// 2. OpenAI Compatible Base URL:
+//    https://dashscope-intl.aliyuncs.com/compatible-mode/v1
+// 3. OpenAI Compatible (Token Plan):
+//    https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1
+// 4. Anthropic Compatible (Token Plan):
+//    https://token-plan.ap-southeast-1.maas.aliyuncs.com/apps/anthropic
 const QWEN_API_URL = process.env.QWEN_API_URL || 'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation';
 const TIMEOUT_MS = 60000; // 60s per attempt to allow for long brief generation
 const MAX_RETRIES = 3;
 
 /**
+ * Core caller helper that handles standard DashScope, OpenAI-compatible, and Anthropic-compatible endpoints.
+ */
+async function callQwenApi(messages, apiKey) {
+  const isAnthropic = QWEN_API_URL.includes('/apps/anthropic') || QWEN_API_URL.includes('/anthropic');
+  const isOpenAI = QWEN_API_URL.includes('/compatible-mode/v1') || QWEN_API_URL.includes('/chat/completions');
+
+  let targetUrl = QWEN_API_URL;
+  let headers = {
+    'Content-Type': 'application/json',
+  };
+  let bodyPayload = {};
+
+  if (isAnthropic) {
+    // Anthropic-compatible mode: e.g. for https://token-plan.ap-southeast-1.maas.aliyuncs.com/apps/anthropic
+    if (!QWEN_API_URL.includes('/v1/messages')) {
+      targetUrl = QWEN_API_URL.endsWith('/')
+        ? `${QWEN_API_URL}v1/messages`
+        : `${QWEN_API_URL}/v1/messages`;
+    }
+    headers['x-api-key'] = apiKey;
+    headers['anthropic-version'] = '2023-06-01';
+    bodyPayload = {
+      model: 'qwen-plus',
+      messages: messages,
+      max_tokens: 4096
+    };
+  } else if (isOpenAI) {
+    // OpenAI-compatible mode: e.g. for https://dashscope-intl.aliyuncs.com/compatible-mode/v1
+    if (!QWEN_API_URL.includes('/chat/completions')) {
+      targetUrl = QWEN_API_URL.endsWith('/')
+        ? `${QWEN_API_URL}chat/completions`
+        : `${QWEN_API_URL}/chat/completions`;
+    }
+    headers['Authorization'] = `Bearer ${apiKey}`;
+    bodyPayload = {
+      model: 'qwen-plus',
+      messages: messages
+    };
+  } else {
+    // Standard DashScope mode: e.g. for https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation
+    headers['Authorization'] = `Bearer ${apiKey}`;
+    bodyPayload = {
+      model: 'qwen-plus',
+      input: { messages: messages },
+      parameters: { result_format: 'message' }
+    };
+  }
+
+  const response = await withTimeout(
+    fetch(targetUrl, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(bodyPayload),
+    }),
+    TIMEOUT_MS,
+    'Qwen API call'
+  );
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Qwen API error ${response.status}: ${text}`);
+  }
+
+  const data = await response.json();
+
+  if (isAnthropic) {
+    return data?.content?.[0]?.text ?? '';
+  } else if (isOpenAI) {
+    return data?.choices?.[0]?.message?.content ?? '';
+  } else {
+    return data?.output?.choices?.[0]?.message?.content ?? '';
+  }
+}
+
+/**
  * Calls Qwen and returns parsed JSON.
  * - Strips ```json fences automatically
  * - Retries up to 3 times with exponential backoff
- * - Times out each attempt at 15s
- * - Falls back to mock if QWEN_API_KEY is not set
+ * - Times out each attempt at 60s
+ * - Falls back to mock if API key is not set
  */
 async function callQwenJSON(prompt, userApiKey) {
   const apiKey = userApiKey || process.env.QWEN_API_KEY;
@@ -19,34 +104,8 @@ async function callQwenJSON(prompt, userApiKey) {
   }
 
   return withRetry(async () => {
-    const isOpenAI = QWEN_API_URL.includes('/chat/completions');
-
-    const bodyPayload = isOpenAI
-      ? { model: 'qwen-plus', messages: [{ role: 'user', content: prompt }] }
-      : { model: 'qwen-plus', input: { messages: [{ role: 'user', content: prompt }] }, parameters: { result_format: 'message' } };
-
-    const response = await withTimeout(
-      fetch(QWEN_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify(bodyPayload),
-      }),
-      TIMEOUT_MS,
-      'Qwen API call'
-    );
-
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(`Qwen API error ${response.status}: ${text}`);
-    }
-
-    const data = await response.json();
-    const raw = isOpenAI
-      ? data?.choices?.[0]?.message?.content ?? ''
-      : data?.output?.choices?.[0]?.message?.content ?? '';
+    const messages = [{ role: 'user', content: prompt }];
+    const raw = await callQwenApi(messages, apiKey);
 
     // Strip ```json fences if model added them
     const cleaned = raw.replace(/```json\s*/gi, '').replace(/```/g, '').trim();
@@ -89,34 +148,7 @@ async function callQwenChat(messages, userApiKey) {
   }
 
   return withRetry(async () => {
-    const isOpenAI = QWEN_API_URL.includes('/chat/completions');
-
-    const bodyPayload = isOpenAI
-      ? { model: 'qwen-plus', messages }
-      : { model: 'qwen-plus', input: { messages }, parameters: { result_format: 'message' } };
-
-    const response = await withTimeout(
-      fetch(QWEN_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify(bodyPayload),
-      }),
-      TIMEOUT_MS,
-      'Qwen API call'
-    );
-
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(`Qwen API error ${response.status}: ${text}`);
-    }
-
-    const data = await response.json();
-    return isOpenAI
-      ? data?.choices?.[0]?.message?.content ?? ''
-      : data?.output?.choices?.[0]?.message?.content ?? '';
+    return await callQwenApi(messages, apiKey);
   }, MAX_RETRIES);
 }
 

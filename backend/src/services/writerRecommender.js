@@ -2,9 +2,9 @@
 
 import { callQwenJSON } from './qwen.js';
 
-export async function recommendWriters(brief, writers) {
+export async function recommendWriters(brief, writers, userApiKey) {
     try {
-        const ranked = await scoreWithAI(brief, writers);
+        const ranked = await scoreWithAI(brief, writers, userApiKey);
         console.log('[writerRecommender] AI scoring succeeded');
         return ranked;
     } catch (err) {
@@ -14,7 +14,7 @@ export async function recommendWriters(brief, writers) {
 }
 
 // ── AI Scorer ──────────────────────────────────────────────────────────────
-async function scoreWithAI(brief, writers) {
+async function scoreWithAI(brief, writers, userApiKey) {
     const prompt = `
 You are an AI content operations assistant for TrendPilot.
 
@@ -46,7 +46,7 @@ Return ONLY a valid JSON array, no markdown, no explanation:
 Sort by matchScore descending. Include every writer.
 `.trim();
 
-    const result = await callQwenJSON(prompt);
+    const result = await callQwenJSON(prompt, userApiKey);
     return mergeScoresWithWriters(result, writers);
 }
 

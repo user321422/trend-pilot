@@ -35,6 +35,7 @@ function findMissingSections(content, headingStructure) {
 // POST /reviews/analyze
 export async function analyzeDraft(req, res) {
   const { draftId } = req.body;
+  const userApiKey = req.headers['x-api-key'];
 
   if (!draftId) {
     return res.status(400).json({ error: "draftId is required" });
@@ -75,7 +76,7 @@ Brief angle: ${brief.angle}
 Brief h1: ${brief.h1}
 Draft (first 500 chars): ${draft.content.slice(0, 500)}`;
 
-  const aiResult = await callQwenJSON(compliancePrompt);
+  const aiResult = await callQwenJSON(compliancePrompt, userApiKey);
 
   // Save review
   const review = await prisma.review.upsert({

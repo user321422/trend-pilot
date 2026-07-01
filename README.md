@@ -1,100 +1,17 @@
-# Trendy AI
+# Trendy
 
 Trendy AI is a fully autonomous content operations platform that automates the lifecycle of digital publishing. The platform manages the entire process: from real-time trend discovery and automated SEO brief generation to AI-assisted writing, draft review, and multi-platform publishing.
 
 ---
 
----
+## Technology Stack
 
-# Project Overview
-
-Trendy AI is an AI-powered content operations platform that automatically transforms trending internet topics into publish-ready content workflows.
-
-The system continuously monitors trend sources, evaluates relevance using AI, generates content briefs, assigns writers, reviews submitted drafts, and prepares content for publishing.
-
-The goal is to reduce the content creation cycle from days to hours while keeping humans involved in critical decisions.
-
----
-
-# Problem Statement
-
-Content teams often miss trending opportunities because:
-
-* Topic discovery is manual
-* Research takes too long
-* Brief creation is repetitive
-* Writer assignment is inefficient
-* SEO optimization is inconsistent
-* Publishing workflows are fragmented
-
-Trendy AI automates these processes while preserving editorial control.
-
----
-
-# Target Users
-
-* Digital Marketing Agencies
-* SaaS Companies
-* News Organizations
-* Bloggers
-* Content Teams
-* Startup Marketing Departments
-
----
-
-# Core Workflow
-
-## Phase 1: Trend Detection
-
-System collects trending topics from:
-
-* Google Trends
-* Reddit
-* News Sources
-
-Output:
-
-* Topic Title
-* Trend Score
-* Relevance Score
-* Opportunity Score
-* AI Explanation
-
----
-
-## Phase 2: Brief Generation
-
-AI generates:
-
-* Topic Summary
-* Audience Analysis
-* Unique Content Angle
-* SEO Keywords
-* H1 Suggestions
-* H2/H3 Structure
-* Recommended Word Count
-
----
-
-## Phase 3: Human Approval
-
-Editor can:
-
-* Approve Brief
-* Reject Brief
-* Edit Brief
-
-Or 
-Auto Pass with AI
----
-
-## Phase 4: Writer Assignment
-
-System recommends best writer using:
-
-* Expertise
-* Availability
-* Historical Performance
+### Frontend
+- **Framework**: React (v19)
+- **Bundler & Build Tool**: Vite (v8)
+- **Language**: TypeScript
+- **Routing**: React Router DOM (v7)
+- **Styling**: Tailwind CSS & Glassmorphism-based Custom CSS
 
 ### Backend & Database
 - **Runtime**: Node.js (v18+)
@@ -177,9 +94,20 @@ DIRECT_URL="postgresql://<user>:<password>@<host>:5432/postgres"
 # Authentication
 JWT_SECRET="your-jwt-secret-key"
 
-# AI Integrations (Qwen API)
+# AI Integrations (Qwen API / Alibaba Cloud Model Studio)
+# Set your Alibaba Cloud Qwen API Key
 QWEN_API_KEY="your-qwen-api-key"
-QWEN_API_URL="your-qwen-api-endpoint"
+
+# Choose one of the following Qwen Cloud base URL endpoints:
+# 1. Standard DashScope Endpoint (Default):
+#    QWEN_API_URL="https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation"
+# 2. OpenAI Compatible Base URL:
+#    QWEN_API_URL="https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
+# 3. Token Plan OpenAI Compatible Base URL:
+#    QWEN_API_URL="https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1"
+# 4. Token Plan Anthropic Compatible Base URL:
+#    QWEN_API_URL="https://token-plan.ap-southeast-1.maas.aliyuncs.com/apps/anthropic"
+QWEN_API_URL="https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
 
 # Publishing APIs
 DEVTO_API_KEY="your-devto-api-key"

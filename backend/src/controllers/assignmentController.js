@@ -8,6 +8,7 @@ const prisma = new PrismaClient();
 // ── GET /assignments/recommend?briefId=<id> ────────────────────────────────
 export async function recommendWriters(req, res) {
   const { briefId } = req.query;
+  const userApiKey = req.headers['x-api-key'];
 
   if (!briefId) {
     return res.status(400).json({ error: "briefId query parameter is required" });
@@ -43,7 +44,7 @@ export async function recommendWriters(req, res) {
     return res.status(404).json({ error: "No writers found in the system" });
   }
 
-  const recommendations = await runRecommender(brief, writers);
+  const recommendations = await runRecommender(brief, writers, userApiKey);
 
   return res.json({
     briefId,
@@ -124,6 +125,7 @@ export async function listAssignments(req, res) {
 // ── POST /assignments/:id/write — manually trigger AI writer for an assignment ──
 export async function triggerAIWrite(req, res) {
   const { id } = req.params;
+  const userApiKey = req.headers['x-api-key'];
 
   const assignment = await prisma.assignment.findUnique({
     where: { id },
@@ -154,7 +156,7 @@ Write the full markdown content for this article. No conversational filler, just
 
   try {
     const { callQwenChat } = await import("../services/qwen.js");
-    const content = await callQwenChat([{ role: 'user', content: prompt }]);
+    const content = await callQwenChat([{ role: 'user', content: prompt }], userApiKey);
 
     await prisma.draft.update({
       where: { id: assignment.draft.id },

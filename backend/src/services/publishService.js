@@ -22,11 +22,11 @@ function suggestPublishSchedule(trend, brief) {
   };
 }
 
-async function generateSocialPosts(draft, brief, trend) {
+async function generateSocialPosts(draft, brief, trend, userApiKey) {
   const excerpt = draft.content?.slice(0, 400) ?? '';
   const prompt = `You are a social media copywriter. Given a published article, generate two social media posts.\n\nArticle title (H1): ${brief.h1 ?? brief.summary}\nTarget keywords: ${brief.seoKeywords?.join(', ') ?? ''}\nArticle excerpt (first 400 chars): ${excerpt}\nTrend topic: ${trend.title}\n\nReturn ONLY valid JSON with this exact shape:\n{\n  "linkedin": { "post": "string", "hashtags": ["string"] },\n  "twitter": { "post": "string (max 280 chars)", "hashtags": ["string"] }\n}`;
   try {
-    return await callQwenJSON(prompt);
+    return await callQwenJSON(prompt, userApiKey);
   } catch (err) {
     const title = brief.h1 ?? brief.summary ?? trend.title;
     const kw = brief.seoKeywords?.[0] ?? trend.title;

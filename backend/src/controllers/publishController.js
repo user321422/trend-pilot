@@ -74,6 +74,7 @@ async function schedulePublish(req, res) {
 // ──────────────────────────────────────────────────────────────────────────────
 async function generateSocial(req, res) {
   const { draftId } = req.body;
+  const userApiKey = req.headers['x-api-key'];
 
   const draft = await prisma.draft.findUnique({
     where: { id: draftId },
@@ -94,7 +95,7 @@ async function generateSocial(req, res) {
   const brief = draft.assignment.brief;
   const trend = brief.trend;
 
-  const posts = await generateSocialPosts(draft, brief, trend);
+  const posts = await generateSocialPosts(draft, brief, trend, userApiKey);
   return res.json({ draftId, posts });
 }
 
