@@ -10,8 +10,8 @@ import { withTimeout, withRetry } from '../middleware/errorHandler.js';
 //    https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1
 // 4. Anthropic Compatible (Token Plan):
 //    https://token-plan.ap-southeast-1.maas.aliyuncs.com/apps/anthropic
-const QWEN_API_URL = process.env.QWEN_API_URL || 'https://ws-opzbykxprs64ym8l.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1';
-const QWEN_MODEL = process.env.QWEN_MODEL || 'qwen-plus';
+const QWEN_API_URL = process.env.QWEN_API_URL;
+const QWEN_MODEL = process.env.QWEN_MODEL;
 const TIMEOUT_MS = 60000; // 60s per attempt to allow for long brief generation
 const MAX_RETRIES = 3;
 
@@ -19,8 +19,8 @@ const MAX_RETRIES = 3;
  * Core caller helper that handles standard DashScope, OpenAI-compatible, and Anthropic-compatible endpoints.
  */
 async function callQwenApi(messages, apiKey) {
-  const isAnthropic = QWEN_API_URL.includes('/apps/anthropic') || QWEN_API_URL.includes('/anthropic');
-  const isOpenAI = QWEN_API_URL.includes('/compatible-mode/v1') || QWEN_API_URL.includes('/chat/completions');
+  const isAnthropic = (QWEN_API_URL || '').includes('/apps/anthropic') || (QWEN_API_URL || '').includes('/anthropic');
+  const isOpenAI = (QWEN_API_URL || '').includes('/compatible-mode/v1') || (QWEN_API_URL || '').includes('/chat/completions');
 
   let targetUrl = QWEN_API_URL;
   let headers = {
