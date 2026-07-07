@@ -11,6 +11,7 @@ import { withTimeout, withRetry } from '../middleware/errorHandler.js';
 // 4. Anthropic Compatible (Token Plan):
 //    https://token-plan.ap-southeast-1.maas.aliyuncs.com/apps/anthropic
 const QWEN_API_URL = process.env.QWEN_API_URL || 'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation';
+const QWEN_MODEL = process.env.QWEN_MODEL || 'qwen3.7-plus';
 const TIMEOUT_MS = 60000; // 60s per attempt to allow for long brief generation
 const MAX_RETRIES = 3;
 
@@ -37,7 +38,7 @@ async function callQwenApi(messages, apiKey) {
     headers['x-api-key'] = apiKey;
     headers['anthropic-version'] = '2023-06-01';
     bodyPayload = {
-      model: 'qwen-plus',
+      model: QWEN_MODEL,
       messages: messages,
       max_tokens: 4096
     };
@@ -50,14 +51,14 @@ async function callQwenApi(messages, apiKey) {
     }
     headers['Authorization'] = `Bearer ${apiKey}`;
     bodyPayload = {
-      model: 'qwen-plus',
+      model: QWEN_MODEL,
       messages: messages
     };
   } else {
     // Standard DashScope mode: e.g. for https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation
     headers['Authorization'] = `Bearer ${apiKey}`;
     bodyPayload = {
-      model: 'qwen-plus',
+      model: QWEN_MODEL,
       input: { messages: messages },
       parameters: { result_format: 'message' }
     };
