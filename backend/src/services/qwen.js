@@ -97,10 +97,59 @@ async function callQwenApi(messages, apiKey) {
  * - Times out each attempt at 60s
  * - Falls back to mock if API key is not set
  */
+function isPlaceholderKey(key) {
+  if (!key) return true;
+  const clean = key.trim().toLowerCase();
+  return (
+    clean === 'your-qwen-api-key' ||
+    clean === '' ||
+    clean.startsWith('your-') ||
+    clean.includes('placeholder') ||
+    clean.includes('api-key')
+  );
+}
+
+function getMockTrendScoring(prompt) {
+  const titleMatch = prompt.match(/Title:\s*"([^"]+)"/);
+  const topicMatch = prompt.match(/Topic:\s*(.+)/);
+  const title = titleMatch?.[1] ?? topicMatch?.[1]?.trim() ?? 'Emerging Trend';
+  return {
+    relevanceScore: Math.floor(Math.random() * 30) + 70, // 70-100
+    opportunityScore: Math.floor(Math.random() * 30) + 65, // 65-95
+    aiExplanation: `This topic "${title}" is highly relevant to our SaaS/B2B tech audience. We should target this trend early to capture search traffic before it saturates.`,
+  };
+}
+
+/**
+ * Calls Qwen and returns parsed JSON.
+ * - Strips ```json fences automatically
+ * - Retries up to 3 times with exponential backoff
+ * - Times out each attempt at 60s
+ * - Falls back to mock if API key is not set
+ */
 async function callQwenJSON(prompt, userApiKey) {
   const apiKey = userApiKey || process.env.QWEN_API_KEY;
-  if (!apiKey) {
-    console.warn('[Qwen] No API key found — using mock response');
+  if (isPlaceholderKey(apiKey)) {
+    console.warn('[Qwen] No valid API key found — using mock response');
+    if (prompt.includes('Agent 1') || prompt.includes('Trend Scorer')) {
+      return getMockTrendScoring(prompt);
+    }
+    if (prompt.includes('content editor') || prompt.includes('Review this draft')) {
+      return {
+        briefComplianceScore: 92,
+        aiNotes: 'The draft follows all target keywords and instructions perfectly. Structure is solid.'
+      };
+    }
+    if (prompt.includes('Rank these writers')) {
+      const ids = [...prompt.matchAll(/"writerId":\s*"([^"]+)"/g)].map(m => m[1]);
+      if (ids.length > 0) {
+        return ids.map(id => ({
+          writerId: id,
+          matchScore: 85,
+          reasoning: "Selected based on expertise match and workload availability."
+        }));
+      }
+    }
     return getMockBrief(prompt);
   }
 
@@ -143,8 +192,8 @@ function getMockBrief(prompt) {
 
 async function callQwenChat(messages, userApiKey) {
   const apiKey = userApiKey || process.env.QWEN_API_KEY;
-  if (!apiKey) {
-    console.warn('[Qwen] No API key found — using mock chat response');
+  if (isPlaceholderKey(apiKey)) {
+    console.warn('[Qwen] No valid API key found — using mock chat response');
     return "This is a mock chat response. Please add your API key in the settings to enable the real AI assistant.";
   }
 
