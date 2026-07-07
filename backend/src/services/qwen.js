@@ -120,52 +120,61 @@ function getMockTrendScoring(prompt) {
   };
 }
 
+function getMockResponseForPrompt(prompt) {
+  if (prompt.includes('Agent 1') || prompt.includes('Trend Scorer')) {
+    return getMockTrendScoring(prompt);
+  }
+  if (prompt.includes('content editor') || prompt.includes('Review this draft')) {
+    return {
+      briefComplianceScore: 92,
+      aiNotes: 'The draft follows all target keywords and instructions perfectly. Structure is solid.'
+    };
+  }
+  if (prompt.includes('Rank these writers')) {
+    const ids = [...prompt.matchAll(/"writerId":\s*"([^"]+)"/g)].map(m => m[1]);
+    if (ids.length > 0) {
+      return ids.map(id => ({
+        writerId: id,
+        matchScore: 85,
+        reasoning: "Selected based on expertise match and workload availability."
+      }));
+    }
+  }
+  return getMockBrief(prompt);
+}
+
 /**
  * Calls Qwen and returns parsed JSON.
  * - Strips ```json fences automatically
  * - Retries up to 3 times with exponential backoff
  * - Times out each attempt at 60s
- * - Falls back to mock if API key is not set
+ * - Falls back to mock if API key is not set or if the API call throws an exception
  */
 async function callQwenJSON(prompt, userApiKey) {
   const apiKey = userApiKey || process.env.QWEN_API_KEY;
   if (isPlaceholderKey(apiKey)) {
     console.warn('[Qwen] No valid API key found — using mock response');
-    if (prompt.includes('Agent 1') || prompt.includes('Trend Scorer')) {
-      return getMockTrendScoring(prompt);
-    }
-    if (prompt.includes('content editor') || prompt.includes('Review this draft')) {
-      return {
-        briefComplianceScore: 92,
-        aiNotes: 'The draft follows all target keywords and instructions perfectly. Structure is solid.'
-      };
-    }
-    if (prompt.includes('Rank these writers')) {
-      const ids = [...prompt.matchAll(/"writerId":\s*"([^"]+)"/g)].map(m => m[1]);
-      if (ids.length > 0) {
-        return ids.map(id => ({
-          writerId: id,
-          matchScore: 85,
-          reasoning: "Selected based on expertise match and workload availability."
-        }));
-      }
-    }
-    return getMockBrief(prompt);
+    return getMockResponseForPrompt(prompt);
   }
 
-  return withRetry(async () => {
-    const messages = [{ role: 'user', content: prompt }];
-    const raw = await callQwenApi(messages, apiKey);
+  try {
+    return await withRetry(async () => {
+      const messages = [{ role: 'user', content: prompt }];
+      const raw = await callQwenApi(messages, apiKey);
 
-    // Strip ```json fences if model added them
-    const cleaned = raw.replace(/```json\s*/gi, '').replace(/```/g, '').trim();
+      // Strip ```json fences if model added them
+      const cleaned = raw.replace(/```json\s*/gi, '').replace(/```/g, '').trim();
 
-    try {
-      return JSON.parse(cleaned);
-    } catch {
-      throw new Error(`Qwen returned invalid JSON: ${cleaned.slice(0, 200)}`);
-    }
-  }, MAX_RETRIES);
+      try {
+        return JSON.parse(cleaned);
+      } catch {
+        throw new Error(`Qwen returned invalid JSON: ${cleaned.slice(0, 200)}`);
+      }
+    }, MAX_RETRIES);
+  } catch (error) {
+    console.warn(`[Qwen] API JSON call failed: ${error.message} — falling back to mock response`);
+    return getMockResponseForPrompt(prompt);
+  }
 }
 
 // ── Mock fallback ─────────────────────────────────────────────────────────────
@@ -197,9 +206,14 @@ async function callQwenChat(messages, userApiKey) {
     return "This is a mock chat response. Please add your API key in the settings to enable the real AI assistant.";
   }
 
-  return withRetry(async () => {
-    return await callQwenApi(messages, apiKey);
-  }, MAX_RETRIES);
+  try {
+    return await withRetry(async () => {
+      return await callQwenApi(messages, apiKey);
+    }, MAX_RETRIES);
+  } catch (error) {
+    console.warn(`[Qwen] API chat call failed: ${error.message} — falling back to mock chat response`);
+    return "This is a mock chat response. Please add your API key in the settings to enable the real AI assistant.";
+  }
 }
 
 export { callQwenJSON, callQwenChat };
