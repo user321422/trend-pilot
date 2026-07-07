@@ -11,7 +11,7 @@ import { withTimeout, withRetry } from '../middleware/errorHandler.js';
 // 4. Anthropic Compatible (Token Plan):
 //    https://token-plan.ap-southeast-1.maas.aliyuncs.com/apps/anthropic
 const QWEN_API_URL = process.env.QWEN_API_URL || 'https://ws-opzbykxprs64ym8l.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1';
-const QWEN_MODEL = process.env.QWEN_MODEL || 'qwen3.7-plus';
+const QWEN_MODEL = process.env.QWEN_MODEL || 'qwen-plus';
 const TIMEOUT_MS = 60000; // 60s per attempt to allow for long brief generation
 const MAX_RETRIES = 3;
 
